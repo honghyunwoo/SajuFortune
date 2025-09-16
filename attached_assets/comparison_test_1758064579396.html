@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>두 가지 시주 계산 방식 비교 분석</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; line-height: 1.6; }
+        .debug-section { background: #f5f5f5; padding: 15px; margin: 10px 0; border-radius: 5px; }
+        .method-box { border: 2px solid #007bff; padding: 15px; margin: 10px 0; border-radius: 5px; }
+        .method1 { border-color: #007bff; background: #f0f8ff; }
+        .method2 { border-color: #dc3545; background: #fff5f5; }
+        .step { margin: 5px 0; padding: 8px; background: white; border-left: 3px solid #007bff; }
+        .error { color: red; font-weight: bold; }
+        .success { color: green; font-weight: bold; }
+        .warning { color: orange; font-weight: bold; }
+        .highlight { background: yellow; padding: 2px; }
+        .comparison { border: 2px solid #28a745; padding: 15px; margin: 10px 0; border-radius: 5px; }
+        table { border-collapse: collapse; width: 100%; margin: 10px 0; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: center; }
+        th { background-color: #f2f2f2; }
+        .diff { background-color: #ffcccc; }
+        .same { background-color: #ccffcc; }
+    </style>
+</head>
+<body>
+    <h1>🔍 두 가지 시주 계산 방식 비교 분석</h1>
+    <p><strong>테스트 케이스:</strong> 일간 무(戊), 12시 (오시)</p>
+
+    <div id="debug-output"></div>
+
+    <script>
+        const 천간 = ['갑', '을', '병', '정', '무', '기', '경', '신', '임', '계'];
+        const 지지 = ['자', '축', '인', '묘', '진', '사', '오', '미', '신', '유', '술', '해'];
+
+        // 방법 1: 원본 사주풀이 시스템 방식 (일간별자시천간 테이블 사용)
+        function getHourGapja_Method1(dayGan, hour) {
+            const dayGanIndex = 천간.indexOf(dayGan);
+
+            // 시지 계산
+            let hourJiIndex;
+            if (hour == 23 || (hour >= 0 && hour <= 0)) hourJiIndex = 0;
+            else if (hour >= 1 && hour <= 2) hourJiIndex = 1;
+            else if (hour >= 3 && hour <= 4) hourJiIndex = 2;
+            else if (hour >= 5 && hour <= 6) hourJiIndex = 3;
+            else if (hour >= 7 && hour <= 8) hourJiIndex = 4;
+            else if (hour >= 9 && hour <= 10) hourJiIndex = 5;
+            else if (hour >= 11 && hour <= 12) hourJiIndex = 6; // 오시
+            else if (hour >= 13 && hour <= 14) hourJiIndex = 7;
+            else if (hour >= 15 && hour <= 16) hourJiIndex = 8;
+            else if (hour >= 17 && hour <= 18) hourJiIndex = 9;
+            else if (hour >= 19 && hour <= 20) hourJiIndex = 10;
+            else if (hour >= 21 && hour <= 22) hourJiIndex = 11;
+            else hourJiIndex = 6;
+
+            // 일간별자시천간 매핑
+            const 일간별자시천간 = {
+                0: 0, 4: 0,  // 갑(0), 기(4) → 갑자시(0)
+                1: 2, 5: 2,  // 을(1), 경(5) → 병자시(2)
+                2: 4, 6: 4,  // 병(2), 신(6) → 무자시(4)
+                3: 6, 7: 6,  // 정(3), 임(7) → 경자시(6)
+                8: 8, 9: 8   // 무(8), 계(9) → 임자시(8)
+            };
+
+            const 자시천간 = 일간별자시천간[dayGanIndex];
+            const hourGanIndex = (자시천간 + hourJiIndex) % 10;
+
+            return {
+                gan: 천간[hourGanIndex],
+                ji: 지지[hourJiIndex],
+                debug: {
+                    method: "Method1 (일간별자시천간)",
+                    dayGanIndex,
+                    hourJiIndex,
+                    자시천간,
+                    hourGanIndex,
+                    calculation: `(${자시천간} + ${hourJiIndex}) % 10 = ${hourGanIndex}`
+                }
+            };
+        }
+
+        // 방법 2: 새로운 방식 (수학적 공식 사용)
+        function calculateHourPillar_Method2(dayGan, hour) {
+            // 시간대별 지지 계산
+            let jiIndex;
+            if (hour >= 23 || hour < 1) jiIndex = 0;      // 자시
+            else if (hour >= 1 && hour < 3) jiIndex = 1;  // 축시
+            else if (hour >= 3 && hour < 5) jiIndex = 2;  // 인시
+            else if (hour >= 5 && hour < 7) jiIndex = 3;  // 묘시
+            else if (hour >= 7 && hour < 9) jiIndex = 4;  // 진시
+            else if (hour >= 9 && hour < 11) jiIndex = 5; // 사시
+            else if (hour >= 11 && hour < 13) jiIndex = 6; // 오시
+            else if (hour >= 13 && hour < 15) jiIndex = 7; // 미시
+            else if (hour >= 15 && hour < 17) jiIndex = 8; // 신시
+            else if (hour >= 17 && hour < 19) jiIndex = 9; // 유시
+            else if (hour >= 19 && hour < 21) jiIndex = 10; // 술시
+            else jiIndex = 11; // 해시
+
+            // 일간에 따른 시간 계산
+            const dayGanIndex = 천간.indexOf(dayGan);
+            const ganIndex = ((dayGanIndex * 2) + (jiIndex / 2)) % 10;
+
+            return {
+                gan: 천간[Math.floor(ganIndex)],
+                ji: 지지[jiIndex],
+                debug: {
+                    method: "Method2 (수학적 공식)",
+                    dayGanIndex,
+                    jiIndex,
+                    ganIndex,
+                    flooredGanIndex: Math.floor(ganIndex),
+                    calculation: `((${dayGanIndex} * 2) + (${jiIndex} / 2)) % 10 = ${ganIndex}`
+                }
+            };
+        }
+
+        // 비교 분석 실행
+        function compareHourCalculations() {
+            const debugOutput = document.getElementById('debug-output');
+            let html = '';
+
+            const testCases = [
+                { dayGan: '무', hour: 12, expected: '무오' },
+                { dayGan: '무', hour: 11, expected: '정오' },
+                { dayGan: '무', hour: 13, expected: '기미' },
+                { dayGan: '갑', hour: 12, expected: '경오' },
+                { dayGan: '을', hour: 12, expected: '임오' }
+            ];
+
+            testCases.forEach((testCase, index) => {
+                html += `<div class="debug-section">`;
+                html += `<h2>🧪 테스트 케이스 ${index + 1}: ${testCase.dayGan}일 ${testCase.hour}시</h2>`;
+                html += `<p><strong>예상 결과:</strong> ${testCase.expected}</p>`;
+
+                // 방법 1 실행
+                const result1 = getHourGapja_Method1(testCase.dayGan, testCase.hour);
+                html += `<div class="method-box method1">`;
+                html += `<h3>📘 방법 1: 일간별자시천간 테이블 방식</h3>`;
+                html += `<div class="step">`;
+                html += `dayGanIndex = ${result1.debug.dayGanIndex}<br>`;
+                html += `hourJiIndex = ${result1.debug.hourJiIndex}<br>`;
+                html += `자시천간 = ${result1.debug.자시천간}<br>`;
+                html += `계산: ${result1.debug.calculation}<br>`;
+                html += `<strong>결과: ${result1.gan}${result1.ji}</strong>`;
+                html += `</div></div>`;
+
+                // 방법 2 실행
+                const result2 = calculateHourPillar_Method2(testCase.dayGan, testCase.hour);
+                html += `<div class="method-box method2">`;
+                html += `<h3>📕 방법 2: 수학적 공식 방식</h3>`;
+                html += `<div class="step">`;
+                html += `dayGanIndex = ${result2.debug.dayGanIndex}<br>`;
+                html += `jiIndex = ${result2.debug.jiIndex}<br>`;
+                html += `계산: ${result2.debug.calculation}<br>`;
+                html += `flooredGanIndex = ${result2.debug.flooredGanIndex}<br>`;
+                html += `<strong>결과: ${result2.gan}${result2.ji}</strong>`;
+                html += `</div></div>`;
+
+                // 비교 결과
+                html += `<div class="comparison">`;
+                html += `<h3>⚖️ 비교 결과</h3>`;
+                const result1Full = result1.gan + result1.ji;
+                const result2Full = result2.gan + result2.ji;
+
+                if (result1Full === result2Full) {
+                    html += `<span class="success">✅ 두 방식 결과 일치: ${result1Full}</span><br>`;
+                } else {
+                    html += `<span class="error">❌ 두 방식 결과 불일치</span><br>`;
+                    html += `방법 1: ${result1Full} vs 방법 2: ${result2Full}<br>`;
+                }
+
+                if (result1Full === testCase.expected) {
+                    html += `<span class="success">✅ 방법 1이 예상 결과와 일치</span><br>`;
+                } else {
+                    html += `<span class="error">❌ 방법 1이 예상 결과와 불일치 (예상: ${testCase.expected})</span><br>`;
+                }
+
+                if (result2Full === testCase.expected) {
+                    html += `<span class="success">✅ 방법 2가 예상 결과와 일치</span><br>`;
+                } else {
+                    html += `<span class="error">❌ 방법 2가 예상 결과와 불일치 (예상: ${testCase.expected})</span><br>`;
+                }
+                html += `</div>`;
+                html += `</div>`;
+            });
+
+            // 전체 요약 테이블
+            html += `<div class="comparison">`;
+            html += `<h2>📊 전체 결과 요약</h2>`;
+            html += `<table>`;
+            html += `<tr><th>테스트</th><th>일간</th><th>시간</th><th>예상</th><th>방법1</th><th>방법2</th><th>방법1 정확도</th><th>방법2 정확도</th></tr>`;
+
+            testCases.forEach((testCase, index) => {
+                const result1 = getHourGapja_Method1(testCase.dayGan, testCase.hour);
+                const result2 = calculateHourPillar_Method2(testCase.dayGan, testCase.hour);
+                const result1Full = result1.gan + result1.ji;
+                const result2Full = result2.gan + result2.ji;
+
+                html += `<tr>`;
+                html += `<td>${index + 1}</td>`;
+                html += `<td>${testCase.dayGan}</td>`;
+                html += `<td>${testCase.hour}시</td>`;
+                html += `<td>${testCase.expected}</td>`;
+                html += `<td class="${result1Full === testCase.expected ? 'same' : 'diff'}">${result1Full}</td>`;
+                html += `<td class="${result2Full === testCase.expected ? 'same' : 'diff'}">${result2Full}</td>`;
+                html += `<td>${result1Full === testCase.expected ? '✅' : '❌'}</td>`;
+                html += `<td>${result2Full === testCase.expected ? '✅' : '❌'}</td>`;
+                html += `</tr>`;
+            });
+
+            html += `</table>`;
+            html += `</div>`;
+
+            debugOutput.innerHTML = html;
+        }
+
+        // 테스트 실행
+        window.onload = function() {
+            console.log('🔍 두 가지 시주 계산 방식 비교 시작...');
+            compareHourCalculations();
+        };
+    </script>
+</body>
+</html>

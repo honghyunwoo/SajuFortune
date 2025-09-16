@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🔍 디버깅 로그 포함 시주 테스트</title>
+    <script src="saju-core-functions.js"></script>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; line-height: 1.6; }
+        .debug-box { background: #f0f8ff; padding: 20px; margin: 15px 0; border-radius: 8px; border: 2px solid #007bff; }
+        .console-log { background: #1e1e1e; color: #00ff00; padding: 15px; font-family: 'Courier New', monospace; border-radius: 5px; overflow-x: auto; white-space: pre-wrap; }
+        .result { background: #fff3cd; padding: 10px; border-radius: 5px; border-left: 4px solid #ffc107; }
+        .error { color: red; font-weight: bold; }
+        .success { color: green; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <h1>🔍 디버깅 로그 포함 시주 테스트</h1>
+    <p><strong>목표</strong>: 실제 getHourGapja 함수의 디버깅 로그를 통해 오류 원인 규명</p>
+
+    <div class="debug-box">
+        <h2>📋 테스트 실행</h2>
+        <button onclick="runTest()" style="padding: 10px 20px; font-size: 16px; background: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer;">🚀 테스트 실행</button>
+        <p style="color: #666; font-size: 14px;">버튼을 클릭한 후 F12 → Console 탭에서 상세 로그를 확인하세요!</p>
+    </div>
+
+    <div id="test-results"></div>
+
+    <div class="debug-box">
+        <h2>📊 예상 vs 실제 비교</h2>
+        <div class="result">
+            <strong>예상 결과:</strong><br>
+            • 일간: 무(戊) → dayGanIndex = 4<br>
+            • 12시 → 오시 → hourJiIndex = 6<br>
+            • 무일 자시천간 = 8 (임자시)<br>
+            • hourGanIndex = (8 + 6) % 10 = 4<br>
+            • 최종: 무오(戊午)
+        </div>
+    </div>
+
+    <script>
+        // 콘솔 출력을 화면에도 표시하기 위한 함수
+        let consoleOutput = '';
+        const originalLog = console.log;
+        console.log = function(...args) {
+            originalLog.apply(console, args);
+            consoleOutput += args.join(' ') + '\n';
+        };
+
+        function runTest() {
+            console.clear();
+            consoleOutput = '';
+
+            console.log('🚀 === 1989-10-06 12:56 시주 계산 디버깅 테스트 시작 ===\n');
+
+            try {
+                // 테스트 데이터
+                const testDate = new Date(1989, 9, 6); // 1989년 10월 6일
+                const testHour = 12;
+
+                console.log('📅 테스트 조건:');
+                console.log('  날짜: ' + testDate.getFullYear() + '년 ' + (testDate.getMonth() + 1) + '월 ' + testDate.getDate() + '일');
+                console.log('  시간: ' + testHour + '시');
+                console.log('');
+
+                // 전체 사주 계산
+                console.log('🔮 전체 사주 계산 시작...');
+                const sajuResult = calculate만세력(testDate, testHour);
+
+                console.log('✅ 전체 사주 계산 완료');
+                console.log('📊 최종 결과:');
+                console.log('  년주: ' + sajuResult.year.gan + sajuResult.year.ji);
+                console.log('  월주: ' + sajuResult.month.gan + sajuResult.month.ji);
+                console.log('  일주: ' + sajuResult.day.gan + sajuResult.day.ji);
+                console.log('  시주: ' + sajuResult.hour.gan + sajuResult.hour.ji);
+                console.log('');
+
+                // 결과 분석
+                const isCorrect = sajuResult.hour.gan === '무' && sajuResult.hour.ji === '오';
+                console.log('🎯 결과 분석:');
+                console.log('  예상 시주: 무오');
+                console.log('  실제 시주: ' + sajuResult.hour.gan + sajuResult.hour.ji);
+                console.log('  정확성: ' + (isCorrect ? '✅ 정확' : '❌ 오류'));
+
+                if (!isCorrect) {
+                    if (sajuResult.hour.gan !== '무') {
+                        const actualIndex = 천간.indexOf(sajuResult.hour.gan);
+                        const expectedIndex = 천간.indexOf('무');
+                        const offset = (actualIndex - expectedIndex + 10) % 10;
+                        console.log('');
+                        console.log('🔍 천간 오류 분석:');
+                        console.log('  실제 천간: ' + sajuResult.hour.gan + ' (인덱스: ' + actualIndex + ')');
+                        console.log('  예상 천간: 무 (인덱스: ' + expectedIndex + ')');
+                        console.log('  오프셋: +' + offset);
+                    }
+                }
+
+                console.log('\n🚀 === 테스트 완료 ===');
+
+                // 결과를 HTML에 표시
+                displayResults(sajuResult, isCorrect);
+
+            } catch (error) {
+                console.error('❌ 테스트 중 오류 발생:', error);
+                document.getElementById('test-results').innerHTML = `
+                    <div class="debug-box">
+                        <h2>❌ 오류 발생</h2>
+                        <div style="color: red; font-family: monospace; background: #ffe6e6; padding: 10px; border-radius: 5px;">
+                            ${error.message}
+                        </div>
+                    </div>
+                `;
+            }
+        }
+
+        function displayResults(sajuResult, isCorrect) {
+            const resultsDiv = document.getElementById('test-results');
+
+            let html = '<div class="debug-box">';
+            html += '<h2>🎯 테스트 결과</h2>';
+            html += '<table style="width: 100%; border-collapse: collapse;">';
+            html += '<tr style="background: #f2f2f2;"><th style="border: 1px solid #ddd; padding: 10px;">구분</th><th style="border: 1px solid #ddd; padding: 10px;">계산 결과</th><th style="border: 1px solid #ddd; padding: 10px;">예상 결과</th><th style="border: 1px solid #ddd; padding: 10px;">상태</th></tr>';
+            html += `<tr><td style="border: 1px solid #ddd; padding: 10px;">년주</td><td style="border: 1px solid #ddd; padding: 10px;">${sajuResult.year.gan}${sajuResult.year.ji}</td><td style="border: 1px solid #ddd; padding: 10px;">기사</td><td style="border: 1px solid #ddd; padding: 10px;">참고</td></tr>`;
+            html += `<tr><td style="border: 1px solid #ddd; padding: 10px;">월주</td><td style="border: 1px solid #ddd; padding: 10px;">${sajuResult.month.gan}${sajuResult.month.ji}</td><td style="border: 1px solid #ddd; padding: 10px;">갑술</td><td style="border: 1px solid #ddd; padding: 10px;">참고</td></tr>`;
+            html += `<tr><td style="border: 1px solid #ddd; padding: 10px;">일주</td><td style="border: 1px solid #ddd; padding: 10px;">${sajuResult.day.gan}${sajuResult.day.ji}</td><td style="border: 1px solid #ddd; padding: 10px;">무오</td><td style="border: 1px solid #ddd; padding: 10px;">${sajuResult.day.gan === '무' && sajuResult.day.ji === '오' ? '<span class="success">✅</span>' : '<span class="error">❌</span>'}</td></tr>`;
+            html += `<tr><td style="border: 1px solid #ddd; padding: 10px;">시주</td><td style="border: 1px solid #ddd; padding: 10px; font-weight: bold; background: ${isCorrect ? '#d4edda' : '#f8d7da'};">${sajuResult.hour.gan}${sajuResult.hour.ji}</td><td style="border: 1px solid #ddd; padding: 10px;">무오</td><td style="border: 1px solid #ddd; padding: 10px;">${isCorrect ? '<span class="success">✅ 정확</span>' : '<span class="error">❌ 오류</span>'}</td></tr>`;
+            html += '</table>';
+            html += '</div>';
+
+            html += '<div class="debug-box">';
+            html += '<h2>📋 콘솔 로그</h2>';
+            html += '<div class="console-log">' + consoleOutput + '</div>';
+            html += '<p style="color: #666; font-size: 14px;">💡 위 로그에서 🔍 [DEBUG] 마크가 있는 줄들이 getHourGapja 함수 내부 동작입니다.</p>';
+            html += '</div>';
+
+            resultsDiv.innerHTML = html;
+        }
+
+        // 페이지 로드 시 안내
+        window.onload = function() {
+            console.log('🔍 디버깅 테스트 준비 완료. "테스트 실행" 버튼을 클릭하세요.');
+        };
+    </script>
+</body>
+</html>

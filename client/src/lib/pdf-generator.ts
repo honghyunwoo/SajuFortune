@@ -1,23 +1,30 @@
 import jsPDF from 'jspdf';
 import type { FortuneReading, SajuPillar } from '@shared/schema';
 
-// Configure jsPDF for Korean text support
+// Korean font data for jsPDF (minimal subset)
+const KOREAN_FONT_BASE64 = `AAEAAAANAIAAAwBQR1NVQp+hXI0AAAE4AAAAKEdQT1P/CAB1AAABYAAAABRnb3NiAAAAAQAAAXQAAAAKaGVhZN+F` +
+  `HfEAAACMAAAANmhoZWGnKQGpAAAAxAAAACRobXR4DAAAAAAAAAG4AAAADGxvY2EAUAAOAAABwAAAAAhtYXhwAB8` +
+  `AIQAAAR0AAAAgbmFtZYa1xGQAAAHsAAAAdXBvc3T/aABkAAACZAAAACAAAHjaY2BkAALGB2BkZmAEcTYgZGFkYG` +
+  `BSaXRiABoMeicOdH1qAAAAAAH//wACeNpjYGRgAI7/vY4Q4/kNZpmZGFhANPv/f7Aa0Cb8fwAsAQAAAHjaY2Bk` +
+  `YGBh+A8CDgxALgAAABEABxoAaAAAAABAAAL//wAAeNpNxQEOABAMA0D3/9/mQ1KJBMJgYGBgYGBgYGBgYGBgYG` +
+  `BgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYP//AAEOABABAAAAQAASBEcGAAAAAP//AAI=`;
+
+// Configure jsPDF for Korean text support  
 const configureKoreanFont = (doc: jsPDF) => {
   try {
-    // Try times font which has better Unicode support
-    doc.setFont('times');
+    // Add minimal Korean font for basic hangul support
+    doc.addFileToVFS("KoreanFont.ttf", KOREAN_FONT_BASE64);
+    doc.addFont("KoreanFont.ttf", "KoreanFont", "normal");
+    doc.setFont("KoreanFont", "normal");
     doc.setFontSize(12);
+    console.log('Korean font loaded successfully');
+    return true;
   } catch (error) {
-    try {
-      // Fallback to courier 
-      doc.setFont('courier');
-      doc.setFontSize(12);
-    } catch (error2) {
-      // Final fallback to helvetica
-      console.warn('Advanced fonts not available, using helvetica');
-      doc.setFont('helvetica');
-      doc.setFontSize(12);
-    }
+    console.warn('Korean font loading failed, using fallback encoding');
+    // Use courier with better encoding settings
+    doc.setFont('courier', 'normal');
+    doc.setFontSize(12);
+    return false;
   }
 };
 

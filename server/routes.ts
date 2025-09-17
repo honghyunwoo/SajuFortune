@@ -3,7 +3,9 @@ import { createServer, type Server } from "http";
 import Stripe from "stripe";
 import { storage } from "./storage";
 import { createFortuneReadingSchema, createDonationSchema } from "@shared/schema";
-import { calculateSaju, analyzeFortune } from "@/lib/saju-calculator";
+import { calculatePremiumSaju } from "@/lib/premium-calculator";
+import { premiumToSajuData } from "@shared/adapters";
+import { analyzeFortune } from "@/lib/saju-calculator";
 
 if (!process.env.STRIPE_SECRET_KEY) {
   console.warn('Warning: STRIPE_SECRET_KEY not found. Payment functionality will be disabled.');
@@ -22,16 +24,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Generate session ID for anonymous users  
       const sessionId = (req as any).sessionID || `session_${Date.now()}_${Math.random()}`;
       
-      // Calculate saju pillars
-      const sajuData = calculateSaju({
-        year: validatedData.birthYear,
-        month: validatedData.birthMonth,
-        day: validatedData.birthDay,
-        hour: validatedData.birthHour,
-        minute: validatedData.birthMinute,
-        gender: validatedData.gender,
-        calendarType: validatedData.calendarType
+      // Calculate saju pillars using premium engine
+      const birthDate = new Date(
+        validatedData.birthYear, 
+        validatedData.birthMonth - 1, 
+        validatedData.birthDay, 
+        validatedData.birthHour, 
+        validatedData.birthMinute
+      );
+      
+      const premiumResult = calculatePremiumSaju(birthDate, validatedData.birthHour, {
+        includeSinsal: true,
+        includeLunar: true,
+        precision: 'premium'
       });
+      
+      // Convert premium result to basic SajuData format
+      const sajuData = premiumToSajuData(premiumResult);
 
       // Generate fortune analysis (all features are now free)
       const analysisResult = analyzeFortune(sajuData, validatedData.gender);
@@ -46,8 +55,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         birthHour: validatedData.birthHour,
         birthMinute: validatedData.birthMinute,
         calendarType: validatedData.calendarType,
-        serviceType: validatedData.serviceType,
-        isPaid: validatedData.isPaid,
+        serviceType: 'free', // 🎯 무료 론칭 기간: 모든 서비스 강제 무료
+        isPaid: false,       // 🎯 무료 론칭 기간: 모든 결제 상태 false
         sajuData,
         analysisResult
       });

@@ -19,6 +19,8 @@ export interface SajuData {
     metal: number;
     water: number;
   };
+  dayMaster: string;
+  strength: 'strong' | 'medium' | 'weak';
 }
 
 export interface TodayFortune {

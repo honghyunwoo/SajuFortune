@@ -76,12 +76,46 @@ function getElementFromGan(gan: 천간타입): string {
 }
 
 /**
+ * 오행 비율로 일간 강약 계산
+ */
+function calculateStrength(elements: { wood: number, fire: number, earth: number, metal: number, water: number }, dayMaster: string): 'strong' | 'medium' | 'weak' {
+  const total = elements.wood + elements.fire + elements.earth + elements.metal + elements.water;
+  
+  // 일간의 오행 파악
+  let dayElement: number;
+  switch(dayMaster.charAt(0)) {
+    case '갑': case '을': dayElement = elements.wood; break;
+    case '병': case '정': dayElement = elements.fire; break;
+    case '무': case '기': dayElement = elements.earth; break;
+    case '경': case '신': dayElement = elements.metal; break;
+    case '임': case '계': dayElement = elements.water; break;
+    default: dayElement = 0;
+  }
+  
+  const ratio = dayElement / total;
+  if (ratio >= 0.35) return 'strong';
+  if (ratio >= 0.20) return 'medium';
+  return 'weak';
+}
+
+/**
  * 프리미엄 사주 분석 결과를 기본 SajuData 형식으로 변환
  * 
  * @param premium PremiumSajuAnalysis 객체
  * @returns SajuData 형식으로 변환된 결과
  */
 export function premiumToSajuData(premium: PremiumSajuAnalysis): SajuData {
+  const elements = {
+    wood: roundToTwo(premium.elements.목),
+    fire: roundToTwo(premium.elements.화),
+    earth: roundToTwo(premium.elements.토),
+    metal: roundToTwo(premium.elements.금),
+    water: roundToTwo(premium.elements.수)
+  };
+  
+  const dayMaster = premium.saju.day.gan; // 일간
+  const strength = calculateStrength(elements, dayMaster);
+  
   return {
     pillars: [
       premium.saju.year,
@@ -93,13 +127,9 @@ export function premiumToSajuData(premium: PremiumSajuAnalysis): SajuData {
       earthly: pillar.ji,
       element: getElementFromGan(pillar.gan)
     })),
-    elements: {
-      wood: roundToTwo(premium.elements.목),
-      fire: roundToTwo(premium.elements.화),
-      earth: roundToTwo(premium.elements.토),
-      metal: roundToTwo(premium.elements.금),
-      water: roundToTwo(premium.elements.수)
-    }
+    elements,
+    dayMaster,
+    strength
   };
 }
 
@@ -165,7 +195,9 @@ export function runAdapterTests(): void {
       { heavenly: '기', earthly: '미', element: 'earth' },
       { heavenly: '경', earthly: '오', element: 'metal' }
     ],
-    elements: { wood: 1.67, fire: 2.33, earth: 3.00, metal: 1.00, water: 2.00 }
+    elements: { wood: 1.67, fire: 2.33, earth: 3.00, metal: 1.00, water: 2.00 },
+    dayMaster: '기',
+    strength: 'strong' // 일간 기토, 토행 3.00 비율이 높음
   };
   
   console.log('✅ 기둥 순서:', JSON.stringify(result1989.pillars) === JSON.stringify(expected1989.pillars) ? 'PASS' : 'FAIL');

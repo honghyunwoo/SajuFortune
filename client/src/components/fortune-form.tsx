@@ -22,8 +22,7 @@ export default function FortuneForm() {
     birthDay: 1,
     birthHour: 12,
     birthMinute: 0,
-    calendarType: "solar",
-    serviceType: "free"
+    calendarType: "solar"
   });
 
   const createReadingMutation = useMutation({
@@ -32,11 +31,7 @@ export default function FortuneForm() {
       return response.json();
     },
     onSuccess: (data) => {
-      if (data.needsPayment) {
-        setLocation(`/checkout/${data.readingId}`);
-      } else {
-        setLocation(`/results/${data.readingId}`);
-      }
+      setLocation(`/results/${data.readingId}`);
     },
     onError: (error: Error) => {
       toast({
@@ -192,38 +187,15 @@ export default function FortuneForm() {
             </RadioGroup>
           </div>
 
-          {/* Service Selection */}
+          {/* Information Notice */}
           <div className="border-t border-border pt-6">
-            <Label className="block text-sm font-medium text-foreground mb-4">분석 서비스 선택</Label>
-            <RadioGroup
-              value={formData.serviceType}
-              onValueChange={(value) => updateFormData("serviceType", value)}
-              className="space-y-3"
-            >
-              <div className="flex items-start p-4 border border-border rounded-lg cursor-pointer hover:bg-muted/5 transition-colors">
-                <RadioGroupItem value="free" id="free" className="mt-1 mr-3" data-testid="radio-free" />
-                <Label htmlFor="free" className="flex-1 cursor-pointer">
-                  <div className="font-medium">무료 기본 분석</div>
-                  <div className="text-sm text-muted-foreground">기본 성격 분석 + 오늘의 운세</div>
-                </Label>
-                <div className="text-primary font-bold">무료</div>
-              </div>
-              
-              <div className="flex items-start p-4 border-2 border-primary rounded-lg cursor-pointer bg-primary/5 transition-colors">
-                <RadioGroupItem value="premium" id="premium" className="mt-1 mr-3" data-testid="radio-premium" />
-                <Label htmlFor="premium" className="flex-1 cursor-pointer">
-                  <div className="font-medium flex items-center">
-                    프리미엄 상세 분석
-                    <span className="ml-2 text-xs bg-primary text-primary-foreground px-2 py-1 rounded-full">인기</span>
-                  </div>
-                  <div className="text-sm text-muted-foreground">상세 운세 + 궁합 + 직업운 + PDF</div>
-                </Label>
-                <div className="text-right">
-                  <div className="text-sm text-muted-foreground line-through">49,000원</div>
-                  <div className="text-primary font-bold">29,000원</div>
-                </div>
-              </div>
-            </RadioGroup>
+            <div className="bg-primary/5 border border-primary/20 rounded-lg p-4">
+              <h3 className="font-medium text-foreground mb-2">🎉 모든 기능이 무료입니다!</h3>
+              <p className="text-sm text-muted-foreground">
+                상세 운세 분석, 궁합, 직업운, 월별 예측 등 모든 기능을 무료로 제공합니다.
+                <br />분석 결과가 도움이 되었다면 후원을 통해 서비스 발전에 도움을 주세요! ☕
+              </p>
+            </div>
           </div>
 
           {/* Submit Button */}
@@ -240,7 +212,7 @@ export default function FortuneForm() {
                 분석 중...
               </>
             ) : (
-              formData.serviceType === "premium" ? "프리미엄 분석 시작하기" : "무료 분석 시작하기"
+              "사주풀이 시작하기"
             )}
           </Button>
 

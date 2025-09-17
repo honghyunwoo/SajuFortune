@@ -1,28 +1,30 @@
 import { useParams } from 'wouter';
 import { useQuery } from '@tanstack/react-query';
 import { Link } from 'wouter';
-import { ArrowLeft, Download, Star, Crown } from 'lucide-react';
+import { ArrowLeft, Download, Star, Coffee } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import ResultDisplay from '@/components/result-display';
+import Donation from '@/components/donation';
 import { generatePDF } from '@/lib/pdf-generator';
 import { useToast } from '@/hooks/use-toast';
+import type { FortuneReading } from '@shared/schema';
 
 export default function Results() {
   const params = useParams();
   const readingId = params.readingId!;
   const { toast } = useToast();
 
-  const { data: reading, isLoading, error } = useQuery({
+  const { data: reading, isLoading, error } = useQuery<FortuneReading>({
     queryKey: ['/api/fortune-readings', readingId],
     enabled: !!readingId,
   });
 
   const handleDownloadPDF = async () => {
-    if (!reading) return;
+    if (!reading || !('id' in reading) || !reading.id) return;
     
     try {
-      await generatePDF(reading);
+      await generatePDF(reading as FortuneReading);
       toast({
         title: "PDF 생성 완료",
         description: "사주풀이 결과가 다운로드되었습니다.",
@@ -54,7 +56,7 @@ export default function Results() {
           <CardContent className="pt-6 text-center">
             <h1 className="text-xl font-bold text-foreground mb-4">결과를 찾을 수 없습니다</h1>
             <p className="text-muted-foreground mb-4">
-              사주풀이 결과가 존재하지 않거나 결제가 완료되지 않았을 수 있습니다.
+              사주풀이 결과가 존재하지 않습니다.
             </p>
             <Link href="/">
               <Button>홈으로 돌아가기</Button>
@@ -80,34 +82,19 @@ export default function Results() {
               <span className="text-lg font-bold text-primary">운명의 해답</span>
             </div>
             <div className="flex items-center space-x-2">
-              {reading.serviceType === 'premium' && reading.isPaid && (
-                <Button 
-                  variant="outline" 
-                  size="sm"
-                  onClick={handleDownloadPDF}
-                  className="flex items-center gap-2"
-                  data-testid="button-download-pdf"
-                >
-                  <Download className="w-4 h-4" />
-                  PDF 다운로드
-                </Button>
-              )}
-              <span className={`px-3 py-1 rounded-full text-sm font-medium flex items-center gap-1 ${
-                reading.serviceType === 'premium' 
-                  ? 'bg-primary text-primary-foreground' 
-                  : 'bg-muted text-muted-foreground'
-              }`}>
-                {reading.serviceType === 'premium' ? (
-                  <>
-                    <Crown className="w-3 h-3" />
-                    프리미엄
-                  </>
-                ) : (
-                  <>
-                    <Star className="w-3 h-3" />
-                    기본
-                  </>
-                )}
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={handleDownloadPDF}
+                className="flex items-center gap-2"
+                data-testid="button-download-pdf"
+              >
+                <Download className="w-4 h-4" />
+                PDF 다운로드
+              </Button>
+              <span className="px-3 py-1 rounded-full text-sm font-medium flex items-center gap-1 bg-primary text-primary-foreground">
+                <Star className="w-3 h-3" />
+                전체 기능 무료
               </span>
             </div>
           </div>
@@ -120,34 +107,33 @@ export default function Results() {
             <h1 className="text-3xl font-bold text-foreground mb-2">
               사주풀이 결과
             </h1>
-            <p className="text-muted-foreground">
-              {reading.birthYear}년 {reading.birthMonth}월 {reading.birthDay}일 {reading.birthHour}시 {reading.birthMinute}분
-              ({reading.gender === 'male' ? '남성' : '여성'}, {reading.calendarType === 'solar' ? '양력' : '음력'})
-            </p>
+            {reading && 'birthYear' in reading && (
+              <p className="text-muted-foreground">
+                {reading.birthYear}년 {reading.birthMonth}월 {reading.birthDay}일 {reading.birthHour}시 {reading.birthMinute}분
+                ({reading.gender === 'male' ? '남성' : '여성'}, {reading.calendarType === 'solar' ? '양력' : '음력'})
+              </p>
+            )}
           </div>
 
-          <ResultDisplay reading={reading} />
+          {reading && 'id' in reading && reading.id && <ResultDisplay reading={reading as FortuneReading} />}
 
-          {/* Call to Action for Free Users */}
-          {reading.serviceType === 'free' && (
-            <Card className="mt-8 bg-gradient-to-br from-primary/5 to-secondary/5 border-2 border-primary">
-              <CardContent className="p-8 text-center">
-                <Crown className="w-12 h-12 text-primary mx-auto mb-4" />
-                <h3 className="text-2xl font-bold text-foreground mb-4">더 자세한 분석이 필요하신가요?</h3>
-                <p className="text-muted-foreground mb-6">
-                  프리미엄 사주풀이로 상세한 운세, 궁합, 월별 예측, PDF 리포트까지 받아보세요
-                </p>
-                <Link href="/">
-                  <Button size="lg" data-testid="button-upgrade-premium">
-                    프리미엄으로 업그레이드하기
-                  </Button>
-                </Link>
-              </CardContent>
-            </Card>
-          )}
+          {/* Donation Section */}
+          <div className="mt-12">
+            <Donation readingId={readingId} />
+          </div>
 
           {/* Share and Feedback */}
           <div className="mt-12 text-center">
+            <div className="mb-6 p-4 bg-gradient-to-r from-green-50 to-blue-50 dark:from-green-950/20 dark:to-blue-950/20 rounded-lg border border-green-200/50 dark:border-green-800/50">
+              <h3 className="text-lg font-semibold mb-2 flex items-center justify-center gap-2">
+                <Coffee className="w-5 h-5 text-orange-500" />
+                모든 기능이 무료입니다!
+              </h3>
+              <p className="text-sm text-muted-foreground">
+                상세 분석, 궁합, 월별 운세까지 모든 기능을 무료로 제공합니다.
+                <br />마음에 드셨다면 커피 한 잔으로 응원해주세요! ☕
+              </p>
+            </div>
             <h3 className="text-lg font-semibold mb-4">결과가 도움이 되셨나요?</h3>
             <div className="flex justify-center space-x-4">
               <Button variant="outline" data-testid="button-share">

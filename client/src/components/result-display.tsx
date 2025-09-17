@@ -7,7 +7,7 @@ interface ResultDisplayProps {
 }
 
 export default function ResultDisplay({ reading }: ResultDisplayProps) {
-  const { sajuData, analysisResult, serviceType } = reading;
+  const { sajuData, analysisResult } = reading;
 
   return (
     <div className="space-y-8">
@@ -82,16 +82,13 @@ export default function ResultDisplay({ reading }: ResultDisplayProps) {
         </CardContent>
       </Card>
 
-      {/* Premium Features */}
-      {serviceType === 'premium' && (
-        <>
-          {/* Detailed Life Analysis */}
-          <Card>
-            <CardContent className="p-6">
-              <h3 className="text-xl font-bold mb-6 flex items-center gap-2">
-                상세 운세 분석
-                <Badge>프리미엄</Badge>
-              </h3>
+      {/* Detailed Life Analysis */}
+      <Card>
+        <CardContent className="p-6">
+          <h3 className="text-xl font-bold mb-6 flex items-center gap-2">
+            상세 운세 분석
+            <Badge variant="secondary">✨ 전체 공개</Badge>
+          </h3>
               <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
                 {Object.entries(analysisResult.detailedAnalysis || {}).map(([key, value]: [string, any]) => (
                   <div key={key} className="text-center p-4 bg-gradient-to-br from-primary/5 to-secondary/5 rounded-lg border">
@@ -128,13 +125,13 @@ export default function ResultDisplay({ reading }: ResultDisplayProps) {
             </CardContent>
           </Card>
 
-          {/* Compatibility Analysis */}
-          <Card>
-            <CardContent className="p-6">
-              <h3 className="text-xl font-bold mb-6 flex items-center gap-2">
-                궁합 분석
-                <Badge>프리미엄</Badge>
-              </h3>
+      {/* Compatibility Analysis */}
+      <Card>
+        <CardContent className="p-6">
+          <h3 className="text-xl font-bold mb-6 flex items-center gap-2">
+            궁합 분석
+            <Badge variant="secondary">✨ 전체 공개</Badge>
+          </h3>
               <div className="space-y-4">
                 {analysisResult.compatibility && Object.entries(analysisResult.compatibility).map(([type, data]: [string, any]) => (
                   <div key={type} className="p-4 bg-muted/10 rounded-lg">
@@ -157,13 +154,13 @@ export default function ResultDisplay({ reading }: ResultDisplayProps) {
             </CardContent>
           </Card>
 
-          {/* Monthly Fortune */}
-          <Card>
-            <CardContent className="p-6">
-              <h3 className="text-xl font-bold mb-6 flex items-center gap-2">
-                2024년 월별 운세
-                <Badge>프리미엄</Badge>
-              </h3>
+      {/* Monthly Fortune */}
+      <Card>
+        <CardContent className="p-6">
+          <h3 className="text-xl font-bold mb-6 flex items-center gap-2">
+            2025년 월별 운세
+            <Badge variant="secondary">✨ 전체 공개</Badge>
+          </h3>
               <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {analysisResult.monthlyFortune && analysisResult.monthlyFortune.map((month: any, index: number) => (
                   <div key={index} className="p-4 bg-muted/10 rounded-lg border">
@@ -180,13 +177,13 @@ export default function ResultDisplay({ reading }: ResultDisplayProps) {
             </CardContent>
           </Card>
 
-          {/* Advice and Recommendations */}
-          <Card>
-            <CardContent className="p-6">
-              <h3 className="text-xl font-bold mb-6 flex items-center gap-2">
-                맞춤 조언 및 개선 방법
-                <Badge>프리미엄</Badge>
-              </h3>
+      {/* Advice and Recommendations */}
+      <Card>
+        <CardContent className="p-6">
+          <h3 className="text-xl font-bold mb-6 flex items-center gap-2">
+            맞춤 조언 및 개선 방법
+            <Badge variant="secondary">✨ 전체 공개</Badge>
+          </h3>
               <div className="space-y-6">
                 {analysisResult.advice && Object.entries(analysisResult.advice).map(([category, advice]: [string, any]) => (
                   <div key={category} className="p-4 bg-gradient-to-br from-primary/5 to-secondary/5 rounded-lg border">
@@ -209,15 +206,13 @@ export default function ResultDisplay({ reading }: ResultDisplayProps) {
               </div>
             </CardContent>
           </Card>
-        </>
-      )}
 
-      {/* Five Elements Analysis (Always shown but limited for free) */}
+      {/* Five Elements Analysis */}
       <Card>
         <CardContent className="p-6">
           <h3 className="text-xl font-bold mb-6 flex items-center gap-2">
             오행 균형 분석
-            {serviceType === 'free' && <Badge variant="outline">미리보기</Badge>}
+            <Badge variant="secondary">✨ 전체 공개</Badge>
           </h3>
           <div className="grid grid-cols-5 gap-3 mb-6">
             {sajuData.elements && Object.entries(sajuData.elements).map(([element, count]: [string, any]) => (
@@ -240,13 +235,13 @@ export default function ResultDisplay({ reading }: ResultDisplayProps) {
               </div>
             ))}
           </div>
-          {serviceType === 'free' && (
-            <div className="text-center p-4 bg-muted/10 rounded-lg border-2 border-dashed border-muted">
-              <p className="text-muted-foreground text-sm">
-                프리미엄에서 오행 균형 상세 분석과 개선 방법을 확인하세요
-              </p>
-            </div>
-          )}
+          <div className="mt-4 p-4 bg-primary/5 rounded-lg border">
+            <h4 className="font-semibold mb-2 text-primary">🔮 오행 균형 해석</h4>
+            <p className="text-sm text-muted-foreground">
+              당신의 오행 구성을 보면 균형잡힌 에너지 분포를 가지고 있습니다. 
+              부족한 원소는 일상생활에서 보완하고, 강한 원소는 더욱 발휘해보세요.
+            </p>
+          </div>
         </CardContent>
       </Card>
     </div>

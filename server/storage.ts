@@ -1,4 +1,4 @@
-import { type User, type InsertUser, type FortuneReading, type InsertFortuneReading } from "@shared/schema";
+import { type User, type InsertUser, type FortuneReading, type InsertFortuneReading, type Donation, type InsertDonation } from "@shared/schema";
 import { randomUUID } from "crypto";
 
 export interface IStorage {
@@ -11,16 +11,21 @@ export interface IStorage {
   createFortuneReading(reading: InsertFortuneReading): Promise<FortuneReading>;
   getFortuneReading(id: string): Promise<FortuneReading | undefined>;
   getFortuneReadingBySessionId(sessionId: string): Promise<FortuneReading | undefined>;
-  updateFortuneReadingPayment(id: string, paymentIntentId: string): Promise<FortuneReading>;
+  
+  createDonation(donation: InsertDonation): Promise<Donation>;
+  getDonationsByReadingId(readingId: string): Promise<Donation[]>;
+  updateDonationPayment(paymentIntentId: string): Promise<Donation>;
 }
 
 export class MemStorage implements IStorage {
   private users: Map<string, User>;
   private fortuneReadings: Map<string, FortuneReading>;
+  private donations: Map<string, Donation>;
 
   constructor() {
     this.users = new Map();
     this.fortuneReadings = new Map();
+    this.donations = new Map();
   }
 
   async getUser(id: string): Promise<User | undefined> {
@@ -83,18 +88,36 @@ export class MemStorage implements IStorage {
     );
   }
 
-  async updateFortuneReadingPayment(id: string, paymentIntentId: string): Promise<FortuneReading> {
-    const reading = this.fortuneReadings.get(id);
-    if (!reading) {
-      throw new Error("Fortune reading not found");
+  async createDonation(insertDonation: InsertDonation): Promise<Donation> {
+    const id = randomUUID();
+    const donation: Donation = {
+      ...insertDonation,
+      id,
+      createdAt: new Date()
+    };
+    this.donations.set(id, donation);
+    return donation;
+  }
+
+  async getDonationsByReadingId(readingId: string): Promise<Donation[]> {
+    return Array.from(this.donations.values()).filter(
+      (donation) => donation.readingId === readingId && donation.isPaid
+    );
+  }
+
+  async updateDonationPayment(paymentIntentId: string): Promise<Donation> {
+    const donation = Array.from(this.donations.values()).find(
+      (d) => d.paymentIntentId === paymentIntentId
+    );
+    if (!donation) {
+      throw new Error("Donation not found");
     }
-    const updatedReading = { 
-      ...reading, 
-      paymentIntentId, 
+    const updatedDonation = { 
+      ...donation, 
       isPaid: true 
     };
-    this.fortuneReadings.set(id, updatedReading);
-    return updatedReading;
+    this.donations.set(donation.id, updatedDonation);
+    return updatedDonation;
   }
 }
 

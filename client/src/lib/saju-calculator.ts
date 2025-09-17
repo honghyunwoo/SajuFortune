@@ -474,21 +474,18 @@ function generateAdvice(sajuData: SajuData): FortuneAnalysis['advice'] {
   };
 }
 
-export function analyzeFortune(sajuData: SajuData, serviceType: 'free' | 'premium', gender = 'male'): FortuneAnalysis {
+export function analyzeFortune(sajuData: SajuData, gender = 'male'): FortuneAnalysis {
   const personality = generatePersonalityAnalysis(sajuData, gender);
   const todayFortune = generateTodayFortune(sajuData);
   
   const analysis: FortuneAnalysis = {
     personality,
-    todayFortune
+    todayFortune,
+    detailedAnalysis: generateDetailedAnalysis(sajuData, gender),
+    compatibility: generateCompatibility(sajuData),
+    monthlyFortune: generateMonthlyFortune(),
+    advice: generateAdvice(sajuData)
   };
-  
-  if (serviceType === 'premium') {
-    analysis.detailedAnalysis = generateDetailedAnalysis(sajuData, gender);
-    analysis.compatibility = generateCompatibility(sajuData);
-    analysis.monthlyFortune = generateMonthlyFortune();
-    analysis.advice = generateAdvice(sajuData);
-  }
   
   return analysis;
 }

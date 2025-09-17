@@ -3,6 +3,79 @@ import { pgTable, text, varchar, timestamp, integer, boolean, jsonb } from "driz
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
+// Saju Data Interfaces
+export interface SajuPillar {
+  heavenly: string;
+  earthly: string;
+  element: string;
+}
+
+export interface SajuData {
+  pillars: SajuPillar[];
+  elements: {
+    wood: number;
+    fire: number;
+    earth: number;
+    metal: number;
+    water: number;
+  };
+}
+
+export interface TodayFortune {
+  rating: number;
+  overall: string;
+  description: string;
+  love: string;
+  career: string;
+  money: string;
+}
+
+export interface DetailedAnalysisItem {
+  score: number;
+  level: string;
+  description: string;
+}
+
+export interface DetailedAnalysis {
+  love: DetailedAnalysisItem;
+  career: DetailedAnalysisItem;
+  health: DetailedAnalysisItem;
+  money: DetailedAnalysisItem;
+}
+
+export interface CompatibilityItem {
+  compatibility: string;
+  description: string;
+}
+
+export interface Compatibility {
+  zodiac: CompatibilityItem;
+  saju: CompatibilityItem;
+  element: CompatibilityItem;
+}
+
+export interface MonthlyFortuneItem {
+  month: number;
+  rating: number;
+  description: string;
+}
+
+export interface Advice {
+  general: string[];
+  career: string[];
+  relationship: string[];
+  health: string[];
+}
+
+export interface AnalysisResult {
+  personality: string;
+  todayFortune: TodayFortune;
+  detailedAnalysis: DetailedAnalysis;
+  compatibility: Compatibility;
+  monthlyFortune: MonthlyFortuneItem[];
+  advice: Advice;
+}
+
 export const users = pgTable("users", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   username: text("username").notNull().unique(),
@@ -23,11 +96,19 @@ export const fortuneReadings = pgTable("fortune_readings", {
   birthHour: integer("birth_hour").notNull(),
   birthMinute: integer("birth_minute").notNull(),
   calendarType: text("calendar_type").notNull(), // 'solar' | 'lunar'
-  serviceType: text("service_type").notNull(), // 'free' | 'premium'
-  isPaid: boolean("is_paid").default(false),
-  paymentIntentId: text("payment_intent_id"),
   sajuData: jsonb("saju_data").notNull(), // Contains calculated saju pillars
   analysisResult: jsonb("analysis_result").notNull(), // Contains fortune analysis
+  createdAt: timestamp("created_at").default(sql`now()`),
+});
+
+export const donations = pgTable("donations", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  readingId: varchar("reading_id").notNull(),
+  amount: integer("amount").notNull(), // Amount in KRW
+  donorName: text("donor_name"),
+  message: text("message"),
+  paymentIntentId: text("payment_intent_id"),
+  isPaid: boolean("is_paid").default(false),
   createdAt: timestamp("created_at").default(sql`now()`),
 });
 
@@ -50,11 +131,28 @@ export const createFortuneReadingSchema = z.object({
   birthHour: z.number().min(0).max(23),
   birthMinute: z.number().min(0).max(59),
   calendarType: z.enum(["solar", "lunar"]),
-  serviceType: z.enum(["free", "premium"]),
+});
+
+export const createDonationSchema = z.object({
+  readingId: z.string(),
+  amount: z.number().min(1000), // Minimum 1,000 KRW
+  donorName: z.string().optional(),
+  message: z.string().optional(),
+});
+
+export const insertDonationSchema = createInsertSchema(donations).omit({
+  id: true,
+  createdAt: true,
 });
 
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
 export type InsertFortuneReading = z.infer<typeof insertFortuneReadingSchema>;
-export type FortuneReading = typeof fortuneReadings.$inferSelect;
+export type FortuneReading = typeof fortuneReadings.$inferSelect & {
+  sajuData: SajuData;
+  analysisResult: AnalysisResult;
+};
 export type CreateFortuneReading = z.infer<typeof createFortuneReadingSchema>;
+export type InsertDonation = z.infer<typeof insertDonationSchema>;
+export type Donation = typeof donations.$inferSelect;
+export type CreateDonation = z.infer<typeof createDonationSchema>;

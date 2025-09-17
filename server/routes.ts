@@ -2,7 +2,7 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import Stripe from "stripe";
 import { storage } from "./storage";
-import { createFortuneReadingSchema } from "@shared/schema";
+import { createFortuneReadingSchema, createDonationSchema } from "@shared/schema";
 import { calculateSaju, analyzeFortune } from "@/lib/saju-calculator";
 
 if (!process.env.STRIPE_SECRET_KEY) {
@@ -33,8 +33,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         calendarType: validatedData.calendarType
       });
 
-      // Generate fortune analysis
-      const analysisResult = analyzeFortune(sajuData, validatedData.serviceType);
+      // Generate fortune analysis (all features are now free)
+      const analysisResult = analyzeFortune(sajuData, validatedData.gender);
 
       const reading = await storage.createFortuneReading({
         userId: null,
@@ -46,16 +46,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         birthHour: validatedData.birthHour,
         birthMinute: validatedData.birthMinute,
         calendarType: validatedData.calendarType,
-        serviceType: validatedData.serviceType,
-        isPaid: validatedData.serviceType === 'free',
-        paymentIntentId: null,
         sajuData,
         analysisResult
       });
 
       res.json({ 
-        readingId: reading.id,
-        needsPayment: validatedData.serviceType === 'premium'
+        readingId: reading.id
       });
     } catch (error: any) {
       res.status(400).json({ message: "Error creating fortune reading: " + error.message });
@@ -70,54 +66,58 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Fortune reading not found" });
       }
 
-      // Check if premium service requires payment
-      if (reading.serviceType === 'premium' && !reading.isPaid) {
-        return res.status(402).json({ message: "Payment required for premium service" });
-      }
-
       res.json(reading);
     } catch (error: any) {
       res.status(500).json({ message: "Error retrieving fortune reading: " + error.message });
     }
   });
 
-  // Stripe payment route for premium fortune readings
-  app.post("/api/create-payment-intent", async (req, res) => {
+  // Create donation payment intent
+  app.post("/api/create-donation", async (req, res) => {
     if (!stripe) {
       return res.status(500).json({ message: "Payment service not available" });
     }
 
     try {
-      const { readingId } = req.body;
+      const validatedData = createDonationSchema.parse(req.body);
+      const { readingId, amount, donorName, message } = validatedData;
       
       const reading = await storage.getFortuneReading(readingId);
       if (!reading) {
         return res.status(404).json({ message: "Fortune reading not found" });
       }
 
-      if (reading.serviceType !== 'premium') {
-        return res.status(400).json({ message: "Payment not required for free service" });
-      }
-
       const paymentIntent = await stripe.paymentIntents.create({
-        amount: 29000 * 100, // 29,000 KRW in cents
+        amount: amount * 100, // Convert to cents
         currency: "krw",
         metadata: {
           readingId: reading.id,
-          serviceType: reading.serviceType
+          type: "donation",
+          donorName: donorName || "익명",
+          message: message || ""
         }
       });
 
-      // Update reading with payment intent ID
-      await storage.updateFortuneReadingPayment(reading.id, paymentIntent.id);
+      // Create donation record
+      const donation = await storage.createDonation({
+        readingId: reading.id,
+        amount,
+        donorName,
+        message,
+        paymentIntentId: paymentIntent.id,
+        isPaid: false
+      });
 
-      res.json({ clientSecret: paymentIntent.client_secret });
+      res.json({ 
+        clientSecret: paymentIntent.client_secret,
+        donationId: donation.id
+      });
     } catch (error: any) {
-      res.status(500).json({ message: "Error creating payment intent: " + error.message });
+      res.status(500).json({ message: "Error creating donation: " + error.message });
     }
   });
 
-  // Webhook to handle successful payments
+  // Webhook to handle successful donations
   app.post("/api/stripe-webhook", async (req, res) => {
     if (!stripe) {
       return res.status(500).json({ message: "Payment service not available" });
@@ -137,16 +137,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       if (event.type === 'payment_intent.succeeded') {
         const paymentIntent = event.data.object;
-        const readingId = paymentIntent.metadata.readingId;
+        const { type } = paymentIntent.metadata;
         
-        if (readingId) {
-          await storage.updateFortuneReadingPayment(readingId, paymentIntent.id);
+        if (type === 'donation') {
+          await storage.updateDonationPayment(paymentIntent.id);
         }
       }
 
       res.json({ received: true });
     } catch (error: any) {
       res.status(400).json({ message: "Webhook error: " + error.message });
+    }
+  });
+
+  // Get donations for a reading
+  app.get("/api/donations/:readingId", async (req, res) => {
+    try {
+      const donations = await storage.getDonationsByReadingId(req.params.readingId);
+      res.json(donations);
+    } catch (error: any) {
+      res.status(500).json({ message: "Error retrieving donations: " + error.message });
     }
   });
 

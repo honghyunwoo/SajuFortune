@@ -19,6 +19,11 @@ function getDayGapja(year, month, day) {
     const baseDate = new Date(1900, 0, 31);
     const targetDate = new Date(year, month - 1, day);
     const diffDays = Math.floor((targetDate - baseDate) / (1000 * 60 * 60 * 24));
+    console.log(`\n📅 일간 계산 상세:
+    기준일: ${baseDate.toDateString()} (1900-01-31)
+    대상일: ${targetDate.toDateString()} (${year}-${month.toString().padStart(2,'0')}-${day.toString().padStart(2,'0')})
+    경과일: ${diffDays}일
+    갑자순번: ${(diffDays % 60 + 60) % 60}`);
     return (diffDays % 60 + 60) % 60;
 }
 

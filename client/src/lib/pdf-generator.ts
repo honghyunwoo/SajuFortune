@@ -1,5 +1,5 @@
 import jsPDF from 'jspdf';
-import type { FortuneReading } from '@shared/schema';
+import type { FortuneReading, SajuPillar } from '@shared/schema';
 
 // Configure jsPDF for Korean text support
 const configureKoreanFont = (doc: jsPDF) => {
@@ -96,7 +96,7 @@ const addSajuPillars = (doc: jsPDF, reading: FortuneReading, startY: number) => 
   doc.rect(25, currentY, 160, 12, 'F');
   doc.rect(25, currentY, 160, 12, 'S');
   
-  pillars.forEach((pillar: any, index: number) => {
+  pillars.forEach((pillar: SajuPillar, index: number) => {
     const pillarText = `${pillar.heavenly}${pillar.earthly}`;
     doc.text(pillarText, 30 + (index * 40), currentY + 6);
     doc.setFontSize(10);
@@ -128,6 +128,20 @@ const addElementsAnalysis = (doc: jsPDF, reading: FortuneReading, startY: number
     const elementText = `${elementNames[element]}: ${count}개`;
     currentY = addKoreanText(doc, elementText, 25, currentY);
   });
+  
+  // Add day master and strength analysis
+  currentY += 5;
+  doc.setFontSize(14);
+  currentY = addKoreanText(doc, '🎯 일간 분석', 20, currentY, { fontSize: 14 });
+  doc.setFontSize(12);
+  currentY = addKoreanText(doc, `일간(日干): ${reading.sajuData.dayMaster} - 태어난 날의 천간으로 당신의 본성을 나타냅니다`, 25, currentY);
+  
+  const strengthText = reading.sajuData.strength === 'strong' ? '강' : 
+                      reading.sajuData.strength === 'medium' ? '중' : '약';
+  const strengthDesc = reading.sajuData.strength === 'strong' ? '오행 균형이 강하여 추진력이 있습니다' :
+                       reading.sajuData.strength === 'medium' ? '오행 균형이 적절하여 안정적입니다' :
+                       '오행 균형이 약하여 섬세하고 신중합니다';
+  currentY = addKoreanText(doc, `일간 강약: ${strengthText} - ${strengthDesc}`, 25, currentY);
   
   return currentY + 10;
 };

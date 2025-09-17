@@ -86,7 +86,7 @@ export default function FortuneForm() {
                   <SelectValue placeholder="년도" />
                 </SelectTrigger>
                 <SelectContent>
-                  {Array.from({ length: 75 }, (_, i) => 2024 - i).map(year => (
+                  {Array.from({ length: 75 }, (_, i) => new Date().getFullYear() - i).map(year => (
                     <SelectItem key={year} value={year.toString()}>
                       {year}년
                     </SelectItem>

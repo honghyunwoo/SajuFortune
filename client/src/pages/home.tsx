@@ -225,7 +225,7 @@ export default function Home() {
                   </div>
 
                   <div>
-                    <h4 className="font-semibold mb-3">월별 운세 (2024년)</h4>
+                    <h4 className="font-semibold mb-3">월별 운세 ({new Date().getFullYear()}년)</h4>
                     <div className="bg-card/50 p-4 rounded-lg">
                       <div className="text-sm mb-2">
                         <strong>12월:</strong> 연말 새로운 기회가 찾아올 것
@@ -450,7 +450,7 @@ export default function Home() {
 
           <div className="flex flex-col md:flex-row justify-between items-center">
             <p className="text-sm">
-              © 2024 운명의 해답. All rights reserved.
+              © {new Date().getFullYear()} 운명의 해답. All rights reserved.
             </p>
             <div className="flex space-x-4 mt-4 md:mt-0">
               <Link href="/" className="hover:text-foreground transition-colors">

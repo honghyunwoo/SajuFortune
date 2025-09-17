@@ -225,7 +225,7 @@ const addPremiumAnalysis = (doc: jsPDF, reading: FortuneReading, startY: number)
   // Monthly Fortune
   if (reading.analysisResult.monthlyFortune) {
     doc.setFontSize(16);
-    currentY = addKoreanText(doc, '📅 2024년 월별 운세', 20, currentY, { fontSize: 16 });
+    currentY = addKoreanText(doc, `📅 ${new Date().getFullYear()}년 월별 운세`, 20, currentY, { fontSize: 16 });
     currentY += 5;
     
     doc.setFontSize(10);
@@ -306,16 +306,14 @@ export async function generatePDF(reading: FortuneReading): Promise<void> {
     currentY = addPersonalityAnalysis(doc, reading, currentY);
     currentY = addTodayFortune(doc, reading, currentY);
     
-    // Add premium content if applicable
-    if (reading.serviceType === 'premium' && reading.isPaid) {
-      // Check if we need a new page
-      if (currentY > 230) {
-        doc.addPage();
-        currentY = addHeader(doc);
-      }
-      
-      currentY = addPremiumAnalysis(doc, reading, currentY);
+    // Add premium content (now included in free service)
+    // Check if we need a new page
+    if (currentY > 230) {
+      doc.addPage();
+      currentY = addHeader(doc);
     }
+    
+    currentY = addPremiumAnalysis(doc, reading, currentY);
     
     // Add footer to all pages
     const pageCount = doc.getNumberOfPages();
@@ -350,13 +348,12 @@ export async function generatePDFBlob(reading: FortuneReading): Promise<Blob> {
   currentY = addPersonalityAnalysis(doc, reading, currentY);
   currentY = addTodayFortune(doc, reading, currentY);
   
-  if (reading.serviceType === 'premium' && reading.isPaid) {
-    if (currentY > 230) {
-      doc.addPage();
-      currentY = addHeader(doc);
-    }
-    currentY = addPremiumAnalysis(doc, reading, currentY);
+  // Premium content included in free service
+  if (currentY > 230) {
+    doc.addPage();
+    currentY = addHeader(doc);
   }
+  currentY = addPremiumAnalysis(doc, reading, currentY);
   
   // Add footer
   const pageCount = doc.getNumberOfPages();

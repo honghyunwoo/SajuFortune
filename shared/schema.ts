@@ -125,7 +125,7 @@ export const insertFortuneReadingSchema = createInsertSchema(fortuneReadings).om
 
 export const createFortuneReadingSchema = z.object({
   gender: z.enum(["male", "female"]),
-  birthYear: z.number().min(1900).max(2024),
+  birthYear: z.number().min(1900).max(new Date().getFullYear()),
   birthMonth: z.number().min(1).max(12),
   birthDay: z.number().min(1).max(31),
   birthHour: z.number().min(0).max(23),

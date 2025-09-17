@@ -3,10 +3,22 @@ import type { FortuneReading, SajuPillar } from '@shared/schema';
 
 // Configure jsPDF for Korean text support
 const configureKoreanFont = (doc: jsPDF) => {
-  // Note: In production, you would need to load Korean font files
-  // For now, we'll use the default font and ensure proper encoding
-  doc.setFont('helvetica');
-  doc.setFontSize(12);
+  try {
+    // Try times font which has better Unicode support
+    doc.setFont('times');
+    doc.setFontSize(12);
+  } catch (error) {
+    try {
+      // Fallback to courier 
+      doc.setFont('courier');
+      doc.setFontSize(12);
+    } catch (error2) {
+      // Final fallback to helvetica
+      console.warn('Advanced fonts not available, using helvetica');
+      doc.setFont('helvetica');
+      doc.setFontSize(12);
+    }
+  }
 };
 
 const addKoreanText = (doc: jsPDF, text: string, x: number, y: number, options: any = {}) => {
@@ -134,14 +146,14 @@ const addElementsAnalysis = (doc: jsPDF, reading: FortuneReading, startY: number
   doc.setFontSize(14);
   currentY = addKoreanText(doc, '🎯 일간 분석', 20, currentY, { fontSize: 14 });
   doc.setFontSize(12);
-  currentY = addKoreanText(doc, `일간(日干): ${reading.sajuData.dayMaster} - 태어난 날의 천간으로 당신의 본성을 나타냅니다`, 25, currentY);
+  currentY = addKoreanText(doc, `일간(日干): ${reading.sajuData.dayMaster} - 태어난 날의 천간으로 당신의 본성을 나타냅니다`, 25, currentY, { maxWidth: 160, lineHeight: 6 });
   
   const strengthText = reading.sajuData.strength === 'strong' ? '강' : 
                       reading.sajuData.strength === 'medium' ? '중' : '약';
   const strengthDesc = reading.sajuData.strength === 'strong' ? '오행 균형이 강하여 추진력이 있습니다' :
                        reading.sajuData.strength === 'medium' ? '오행 균형이 적절하여 안정적입니다' :
                        '오행 균형이 약하여 섬세하고 신중합니다';
-  currentY = addKoreanText(doc, `일간 강약: ${strengthText} - ${strengthDesc}`, 25, currentY);
+  currentY = addKoreanText(doc, `일간 강약: ${strengthText} - ${strengthDesc}`, 25, currentY, { maxWidth: 160, lineHeight: 6 });
   
   return currentY + 10;
 };

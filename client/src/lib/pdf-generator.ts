@@ -1,46 +1,96 @@
 import jsPDF from 'jspdf';
 import type { FortuneReading, SajuPillar } from '@shared/schema';
 
-// Korean font data for jsPDF (minimal subset)
-const KOREAN_FONT_BASE64 = `AAEAAAANAIAAAwBQR1NVQp+hXI0AAAE4AAAAKEdQT1P/CAB1AAABYAAAABRnb3NiAAAAAQAAAXQAAAAKaGVhZN+F` +
-  `HfEAAACMAAAANmhoZWGnKQGpAAAAxAAAACRobXR4DAAAAAAAAAG4AAAADGxvY2EAUAAOAAABwAAAAAhtYXhwAB8` +
-  `AIQAAAR0AAAAgbmFtZYa1xGQAAAHsAAAAdXBvc3T/aABkAAACZAAAACAAAHjaY2BkAALGB2BkZmAEcTYgZGFkYG` +
-  `BSaXRiABoMeicOdH1qAAAAAAH//wACeNpjYGRgAI7/vY4Q4/kNZpmZGFhANPv/f7Aa0Cb8fwAsAQAAAHjaY2Bk` +
-  `YGBh+A8CDgxALgAAABEABxoAaAAAAABAAAL//wAAeNpNxQEOABAMA0D3/9/mQ1KJBMJgYGBgYGBgYGBgYGBgYG` +
-  `BgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYP//AAEOABABAAAAQAASBEcGAAAAAP//AAI=`;
-
-// Configure jsPDF for Korean text support  
+// Configure jsPDF for Korean text support with ASCII fallback
 const configureKoreanFont = (doc: jsPDF) => {
   try {
-    // Add minimal Korean font for basic hangul support
-    doc.addFileToVFS("KoreanFont.ttf", KOREAN_FONT_BASE64);
-    doc.addFont("KoreanFont.ttf", "KoreanFont", "normal");
-    doc.setFont("KoreanFont", "normal");
+    // Use courier font which provides better character support than helvetica
+    doc.setFont('courier', 'normal');
     doc.setFontSize(12);
-    console.log('Korean font loaded successfully');
+    console.log('Using courier font for better text support');
     return true;
   } catch (error) {
-    console.warn('Korean font loading failed, using fallback encoding');
-    // Use courier with better encoding settings
-    doc.setFont('courier', 'normal');
+    console.warn('Courier font failed, using helvetica');
+    doc.setFont('helvetica');
     doc.setFontSize(12);
     return false;
   }
 };
 
+// Korean to English translation map for PDF
+const KOREAN_TO_ENGLISH: { [key: string]: string } = {
+  '운명의 해답': 'Fortune Reading',
+  '전통 사주풀이 분석 결과': 'Traditional Saju Analysis Results',
+  '개인 정보': 'Personal Information',
+  '생년월일': 'Birth Date',
+  '성별': 'Gender',
+  '남성': 'Male',
+  '여성': 'Female',
+  '달력': 'Calendar',
+  '양력': 'Solar',
+  '음력': 'Lunar',
+  '사주팔자': 'Four Pillars (Saju)',
+  '년주': 'Year Pillar',
+  '월주': 'Month Pillar', 
+  '일주': 'Day Pillar',
+  '시주': 'Hour Pillar',
+  '오행 균형 분석': 'Five Elements Balance Analysis',
+  '목': 'Wood',
+  '화': 'Fire',
+  '토': 'Earth',
+  '금': 'Metal',
+  '수': 'Water',
+  '일간 분석': 'Day Master Analysis',
+  '일간': 'Day Master',
+  '일간 강약': 'Day Master Strength',
+  '강': 'Strong',
+  '중': 'Medium',
+  '약': 'Weak',
+  '성격 분석': 'Personality Analysis',
+  '오늘의 운세': 'Today\'s Fortune',
+  '종합운': 'Overall',
+  '연애운': 'Love',
+  '직업운': 'Career',
+  '재물운': 'Money',
+  '맞춤 조언': 'Personalized Advice',
+  '건강 관리': 'Health Care',
+  '재물 관리': 'Wealth Management',
+  '인간관계': 'Relationships',
+  '직업 발전': 'Career Development'
+};
+
 const addKoreanText = (doc: jsPDF, text: string, x: number, y: number, options: any = {}) => {
   const { fontSize = 12, maxWidth = 180, lineHeight = 7 } = options;
   
-  doc.setFontSize(fontSize);
-  
-  if (maxWidth) {
-    const lines = doc.splitTextToSize(text, maxWidth);
-    lines.forEach((line: string, index: number) => {
-      doc.text(line, x, y + (index * lineHeight));
+  try {
+    doc.setFontSize(fontSize);
+    
+    // Translate Korean text to English for ASCII compatibility
+    let translatedText = text;
+    for (const [korean, english] of Object.entries(KOREAN_TO_ENGLISH)) {
+      translatedText = translatedText.replace(new RegExp(korean, 'g'), english);
+    }
+    
+    // Replace remaining Korean characters with romanization placeholders
+    translatedText = translatedText.replace(/[가-힣]/g, (match) => {
+      // Simple romanization - you could expand this
+      return `[${match}]`;
     });
-    return y + (lines.length * lineHeight);
-  } else {
-    doc.text(text, x, y);
+    
+    if (maxWidth) {
+      const lines = doc.splitTextToSize(translatedText, maxWidth);
+      lines.forEach((line: string, index: number) => {
+        doc.text(line, x, y + (index * lineHeight));
+      });
+      return y + (lines.length * lineHeight);
+    } else {
+      doc.text(translatedText, x, y);
+      return y + lineHeight;
+    }
+  } catch (error) {
+    console.error('Text rendering error:', error);
+    // Fallback with simplified text
+    doc.text('[Content not available]', x, y);
     return y + lineHeight;
   }
 };

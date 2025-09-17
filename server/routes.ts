@@ -10,7 +10,7 @@ if (!process.env.STRIPE_SECRET_KEY) {
 }
 
 const stripe = process.env.STRIPE_SECRET_KEY ? new Stripe(process.env.STRIPE_SECRET_KEY, {
-  apiVersion: "2023-10-16",
+  apiVersion: "2025-08-27.basil",
 }) : null;
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -46,6 +46,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         birthHour: validatedData.birthHour,
         birthMinute: validatedData.birthMinute,
         calendarType: validatedData.calendarType,
+        serviceType: validatedData.serviceType,
+        isPaid: validatedData.isPaid,
         sajuData,
         analysisResult
       });

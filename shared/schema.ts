@@ -96,6 +96,8 @@ export const fortuneReadings = pgTable("fortune_readings", {
   birthHour: integer("birth_hour").notNull(),
   birthMinute: integer("birth_minute").notNull(),
   calendarType: text("calendar_type").notNull(), // 'solar' | 'lunar'
+  serviceType: text("service_type").notNull().default('free'), // 'free' | 'premium'
+  isPaid: boolean("is_paid").notNull().default(false), // Payment status for premium service
   sajuData: jsonb("saju_data").notNull(), // Contains calculated saju pillars
   analysisResult: jsonb("analysis_result").notNull(), // Contains fortune analysis
   createdAt: timestamp("created_at").default(sql`now()`),
@@ -131,6 +133,8 @@ export const createFortuneReadingSchema = z.object({
   birthHour: z.number().min(0).max(23),
   birthMinute: z.number().min(0).max(59),
   calendarType: z.enum(["solar", "lunar"]),
+  serviceType: z.enum(["free", "premium"]).default("free"),
+  isPaid: z.boolean().default(false),
 });
 
 export const createDonationSchema = z.object({

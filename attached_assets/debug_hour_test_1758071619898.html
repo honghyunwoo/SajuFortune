@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>시주 계산 디버깅 테스트</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .debug-section { background: #f5f5f5; padding: 15px; margin: 10px 0; border-radius: 5px; }
+        .step { margin: 5px 0; padding: 5px; background: white; border-left: 3px solid #007bff; }
+        .error { color: red; font-weight: bold; }
+        .success { color: green; font-weight: bold; }
+        .highlight { background: yellow; padding: 2px; }
+    </style>
+</head>
+<body>
+    <h1>🔍 시주 계산 디버깅 테스트</h1>
+    <p><strong>테스트 케이스:</strong> 일간 무(戊), 시간 12:56 (오시)</p>
+    <p><strong>예상 결과:</strong> 무오(戊午)</p>
+
+    <div id="debug-output"></div>
+
+    <script>
+        // 사주 관련 상수들
+        const 천간 = ['갑', '을', '병', '정', '무', '기', '경', '신', '임', '계'];
+        const 지지 = ['자', '축', '인', '묘', '진', '사', '오', '미', '신', '유', '술', '해'];
+
+        // 원본 getHourGapja 함수를 디버깅 버전으로 수정
+        function debugGetHourGapja(dayGan, hour) {
+            const debugOutput = document.getElementById('debug-output');
+            let html = '<div class="debug-section"><h2>🔍 단계별 디버깅 추적</h2>';
+
+            // 1단계: 입력값 확인
+            html += '<div class="step"><strong>1단계: 입력값 확인</strong><br>';
+            html += `일간(dayGan): "${dayGan}"<br>`;
+            html += `시간(hour): ${hour}<br></div>`;
+
+            // 2단계: dayGanIndex 계산
+            const dayGanIndex = 천간.indexOf(dayGan);
+            html += '<div class="step"><strong>2단계: dayGanIndex 계산</strong><br>';
+            html += `천간 배열: [${천간.join(', ')}]<br>`;
+            html += `dayGanIndex = 천간.indexOf("${dayGan}") = <span class="highlight">${dayGanIndex}</span><br></div>`;
+
+            // 3단계: hourJiIndex 계산 (시지 계산)
+            let hourJiIndex;
+            html += '<div class="step"><strong>3단계: hourJiIndex 계산 (시지 계산)</strong><br>';
+            html += `입력 시간: ${hour}시<br>`;
+
+            if (hour == 23 || (hour >= 0 && hour <= 0)) {
+                hourJiIndex = 0;
+                html += `23시 또는 0시 → 자시 → hourJiIndex = 0<br>`;
+            }
+            else if (hour >= 1 && hour <= 2) {
+                hourJiIndex = 1;
+                html += `1-2시 → 축시 → hourJiIndex = 1<br>`;
+            }
+            else if (hour >= 3 && hour <= 4) {
+                hourJiIndex = 2;
+                html += `3-4시 → 인시 → hourJiIndex = 2<br>`;
+            }
+            else if (hour >= 5 && hour <= 6) {
+                hourJiIndex = 3;
+                html += `5-6시 → 묘시 → hourJiIndex = 3<br>`;
+            }
+            else if (hour >= 7 && hour <= 8) {
+                hourJiIndex = 4;
+                html += `7-8시 → 진시 → hourJiIndex = 4<br>`;
+            }
+            else if (hour >= 9 && hour <= 10) {
+                hourJiIndex = 5;
+                html += `9-10시 → 사시 → hourJiIndex = 5<br>`;
+            }
+            else if (hour >= 11 && hour <= 12) {
+                hourJiIndex = 6;
+                html += `<span class="highlight">11-12시 → 오시 → hourJiIndex = 6</span><br>`;
+            }
+            else if (hour >= 13 && hour <= 14) {
+                hourJiIndex = 7;
+                html += `13-14시 → 미시 → hourJiIndex = 7<br>`;
+            }
+            else if (hour >= 15 && hour <= 16) {
+                hourJiIndex = 8;
+                html += `15-16시 → 신시 → hourJiIndex = 8<br>`;
+            }
+            else if (hour >= 17 && hour <= 18) {
+                hourJiIndex = 9;
+                html += `17-18시 → 유시 → hourJiIndex = 9<br>`;
+            }
+            else if (hour >= 19 && hour <= 20) {
+                hourJiIndex = 10;
+                html += `19-20시 → 술시 → hourJiIndex = 10<br>`;
+            }
+            else if (hour >= 21 && hour <= 22) {
+                hourJiIndex = 11;
+                html += `21-22시 → 해시 → hourJiIndex = 11<br>`;
+            }
+            else {
+                hourJiIndex = 6;
+                html += `기타 → 기본값 오시 → hourJiIndex = 6<br>`;
+            }
+
+            html += `지지 배열: [${지지.join(', ')}]<br>`;
+            html += `지지[${hourJiIndex}] = "<span class="highlight">${지지[hourJiIndex]}</span>"<br></div>`;
+
+            // 4단계: 일간별자시천간 매핑
+            const 일간별자시천간 = {
+                0: 0, 4: 0,  // 갑(0), 기(4) → 갑자시(0)
+                1: 2, 5: 2,  // 을(1), 경(5) → 병자시(2)
+                2: 4, 6: 4,  // 병(2), 신(6) → 무자시(4)
+                3: 6, 7: 6,  // 정(3), 임(7) → 경자시(6)
+                8: 8, 9: 8   // 무(8), 계(9) → 임자시(8)
+            };
+
+            html += '<div class="step"><strong>4단계: 일간별자시천간 매핑</strong><br>';
+            html += `일간별자시천간 = {<br>`;
+            html += `&nbsp;&nbsp;0: 0, 4: 0,  // 갑(0), 기(4) → 갑자시(0)<br>`;
+            html += `&nbsp;&nbsp;1: 2, 5: 2,  // 을(1), 경(5) → 병자시(2)<br>`;
+            html += `&nbsp;&nbsp;2: 4, 6: 4,  // 병(2), 신(6) → 무자시(4)<br>`;
+            html += `&nbsp;&nbsp;3: 6, 7: 6,  // 정(3), 임(7) → 경자시(6)<br>`;
+            html += `&nbsp;&nbsp;<span class="highlight">8: 8, 9: 8</span>   // 무(8), 계(9) → 임자시(8)<br>`;
+            html += `}<br>`;
+
+            const 자시천간 = 일간별자시천간[dayGanIndex];
+            html += `자시천간 = 일간별자시천간[${dayGanIndex}] = <span class="highlight">${자시천간}</span><br></div>`;
+
+            // 5단계: hourGanIndex 계산
+            const hourGanIndex = (자시천간 + hourJiIndex) % 10;
+            html += '<div class="step"><strong>5단계: hourGanIndex 계산</strong><br>';
+            html += `hourGanIndex = (자시천간 + hourJiIndex) % 10<br>`;
+            html += `hourGanIndex = (${자시천간} + ${hourJiIndex}) % 10<br>`;
+            html += `hourGanIndex = ${자시천간 + hourJiIndex} % 10<br>`;
+            html += `hourGanIndex = <span class="highlight">${hourGanIndex}</span><br></div>`;
+
+            // 6단계: 최종 결과
+            const result = {
+                gan: 천간[hourGanIndex],
+                ji: 지지[hourJiIndex]
+            };
+
+            html += '<div class="step"><strong>6단계: 최종 결과</strong><br>';
+            html += `천간[${hourGanIndex}] = "<span class="highlight">${result.gan}</span>"<br>`;
+            html += `지지[${hourJiIndex}] = "<span class="highlight">${result.ji}</span>"<br>`;
+            html += `<strong>최종 시주: ${result.gan}${result.ji} (${result.gan}${result.ji})</strong><br></div>`;
+
+            // 7단계: 예상 vs 실제 비교
+            html += '<div class="step"><strong>7단계: 예상 vs 실제 비교</strong><br>';
+            html += `예상 결과: <span class="highlight">무오(戊午)</span><br>`;
+            html += `실제 결과: <span class="highlight">${result.gan}${result.ji}</span><br>`;
+
+            if (result.gan === '무' && result.ji === '오') {
+                html += `<span class="success">✅ 정확함! 예상과 일치</span><br>`;
+            } else {
+                html += `<span class="error">❌ 오류 발견! 예상과 불일치</span><br>`;
+
+                // 오류 분석
+                if (result.ji !== '오') {
+                    html += `지지 오류: 12시는 오시(${지지[6]})여야 하는데 ${result.ji}가 나옴<br>`;
+                }
+                if (result.gan !== '무') {
+                    html += `천간 오류: 무일 오시는 무오시여야 하는데 ${result.gan}오시가 나옴<br>`;
+                }
+            }
+            html += '</div>';
+
+            html += '</div>';
+            debugOutput.innerHTML = html;
+
+            return result;
+        }
+
+        // 테스트 실행
+        window.onload = function() {
+            console.log('🔍 시주 계산 디버깅 시작...');
+            const result = debugGetHourGapja('무', 12);
+            console.log('디버깅 결과:', result);
+        };
+    </script>
+</body>
+</html>

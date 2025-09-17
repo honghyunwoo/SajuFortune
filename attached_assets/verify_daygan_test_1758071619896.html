@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🔍 1989-10-06 일간 검증</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; line-height: 1.6; }
+        .result-box { background: #f0f8ff; padding: 20px; margin: 15px 0; border-radius: 8px; border: 2px solid #007bff; }
+        .error { color: red; font-weight: bold; }
+        .success { color: green; font-weight: bold; }
+        .highlight { background: yellow; padding: 2px; }
+        table { border-collapse: collapse; width: 100%; margin: 15px 0; }
+        th, td { border: 1px solid #ddd; padding: 10px; text-align: center; }
+        th { background-color: #f2f2f2; }
+    </style>
+</head>
+<body>
+    <h1>🔍 1989년 10월 6일 일간 검증 테스트</h1>
+    <p><strong>목표</strong>: 1989-10-06의 일간이 정말 '무(戊)'인지 확인</p>
+
+    <div id="result-output"></div>
+
+    <script>
+        // 원본 시스템과 동일한 배열
+        const 천간 = ['갑', '을', '병', '정', '무', '기', '경', '신', '임', '계'];
+        const 지지 = ['자', '축', '인', '묘', '진', '사', '오', '미', '신', '유', '술', '해'];
+
+        // 원본 시스템과 동일한 일주 계산
+        function getDayGapja(year, month, day) {
+            const baseDate = new Date(1900, 0, 31); // 1900년 1월 31일 = 갑자일
+            const targetDate = new Date(year, month - 1, day);
+            const diffDays = Math.floor((targetDate - baseDate) / (1000 * 60 * 60 * 24));
+            return (diffDays % 60 + 60) % 60;
+        }
+
+        // 검증 함수
+        function verify1989DayGan() {
+            const year = 1989, month = 10, day = 6;
+
+            console.log('\n🔍 === 1989-10-06 일간 검증 시작 ===');
+            console.log(`입력: ${year}년 ${month}월 ${day}일`);
+
+            // 1단계: 기준일로부터 경과일 계산
+            const baseDate = new Date(1900, 0, 31);
+            const targetDate = new Date(year, month - 1, day);
+            const diffDays = Math.floor((targetDate - baseDate) / (1000 * 60 * 60 * 24));
+
+            console.log(`기준일: 1900년 1월 31일 (갑자일)`);
+            console.log(`대상일: ${year}년 ${month}월 ${day}일`);
+            console.log(`경과 일수: ${diffDays}일`);
+
+            // 2단계: 60갑자 순환 계산
+            const dayGapja = (diffDays % 60 + 60) % 60;
+            console.log(`60갑자 인덱스: ${dayGapja}`);
+
+            // 3단계: 천간/지지 분리
+            const ganIndex = dayGapja % 10;
+            const jiIndex = dayGapja % 12;
+            const dayGan = 천간[ganIndex];
+            const dayJi = 지지[jiIndex];
+
+            console.log(`천간 인덱스: ${ganIndex} → ${dayGan}`);
+            console.log(`지지 인덱스: ${jiIndex} → ${dayJi}`);
+            console.log(`최종 일주: ${dayGan}${dayJi}`);
+
+            // 4단계: 수동 검증 (알려진 기준일과 비교)
+            // 1989년 10월 6일 = 무오일이 맞는지 다른 방법으로도 검증
+            const knownDate = new Date(2000, 0, 1); // 2000년 1월 1일 = 갑진일
+            const diffFrom2000 = Math.floor((targetDate - knownDate) / (1000 * 60 * 60 * 24));
+            const gapjaFrom2000 = (40 + diffFrom2000) % 60; // 갑진일 = 40번째
+            const alternativeGapja = (gapjaFrom2000 + 60) % 60;
+
+            console.log('\n📊 대체 검증:');
+            console.log(`2000-01-01(갑진일)로부터 ${diffFrom2000}일`);
+            console.log(`대체 계산 갑자: ${alternativeGapja}`);
+            console.log(`대체 계산 결과: ${천간[alternativeGapja % 10]}${지지[alternativeGapja % 12]}`);
+
+            console.log('🔍 === 일간 검증 완료 ===\n');
+
+            return {
+                date: `${year}-${month}-${day}`,
+                diffDays: diffDays,
+                dayGapja: dayGapja,
+                dayGan: dayGan,
+                dayJi: dayJi,
+                dayPillar: `${dayGan}${dayJi}`,
+                alternativeCheck: `${천간[alternativeGapja % 10]}${지지[alternativeGapja % 12]}`,
+                isConsistent: dayGapja === alternativeGapja
+            };
+        }
+
+        // 여러 날짜로 검증
+        function multiDateTest() {
+            const testDates = [
+                {year: 1989, month: 10, day: 6, expected: '무오'},
+                {year: 1989, month: 10, day: 5, expected: '정사'},
+                {year: 1989, month: 10, day: 7, expected: '기미'},
+                {year: 2000, month: 1, day: 1, expected: '갑진'},   // 알려진 기준일
+            ];
+
+            console.log('\n🧪 === 여러 날짜 검증 테스트 ===');
+
+            const results = [];
+            testDates.forEach(test => {
+                const result = getDayGapja(test.year, test.month, test.day);
+                const gan = 천간[result % 10];
+                const ji = 지지[result % 12];
+                const calculated = `${gan}${ji}`;
+                const isCorrect = calculated === test.expected;
+
+                console.log(`${test.year}-${test.month.toString().padStart(2,'0')}-${test.day.toString().padStart(2,'0')}: ${calculated} (예상: ${test.expected}) ${isCorrect ? '✅' : '❌'}`);
+
+                results.push({
+                    date: `${test.year}-${test.month}-${test.day}`,
+                    calculated: calculated,
+                    expected: test.expected,
+                    correct: isCorrect
+                });
+            });
+
+            return results;
+        }
+
+        // HTML 출력 함수
+        function displayResults() {
+            const output = document.getElementById('result-output');
+
+            // 콘솔 출력도 실행
+            console.clear();
+            const mainResult = verify1989DayGan();
+            const multiResults = multiDateTest();
+
+            let html = '<div class="result-box">';
+            html += '<h2>🎯 1989-10-06 일간 검증 결과</h2>';
+            html += '<table>';
+            html += '<tr><th>항목</th><th>값</th><th>비고</th></tr>';
+            html += `<tr><td>날짜</td><td>${mainResult.date}</td><td>테스트 대상</td></tr>`;
+            html += `<tr><td>기준일로부터 경과</td><td>${mainResult.diffDays}일</td><td>1900-01-31 기준</td></tr>`;
+            html += `<tr><td>60갑자 인덱스</td><td>${mainResult.dayGapja}</td><td>순환 계산 결과</td></tr>`;
+            html += `<tr><td>계산된 일간</td><td><span class="highlight">${mainResult.dayGan}</span></td><td>시스템 계산값</td></tr>`;
+            html += `<tr><td>계산된 일주</td><td><span class="highlight">${mainResult.dayPillar}</span></td><td>전체 간지</td></tr>`;
+            html += `<tr><td>대체 검증</td><td>${mainResult.alternativeCheck}</td><td>2000-01-01 기준</td></tr>`;
+            html += `<tr><td>일관성</td><td>${mainResult.isConsistent ? '<span class="success">✅ 일치</span>' : '<span class="error">❌ 불일치</span>'}</td><td>두 방법 비교</td></tr>`;
+            html += '</table>';
+            html += '</div>';
+
+            html += '<div class="result-box">';
+            html += '<h2>🧪 다중 날짜 검증 결과</h2>';
+            html += '<table>';
+            html += '<tr><th>날짜</th><th>계산 결과</th><th>예상 결과</th><th>정확성</th></tr>';
+            multiResults.forEach(result => {
+                html += `<tr>`;
+                html += `<td>${result.date}</td>`;
+                html += `<td>${result.calculated}</td>`;
+                html += `<td>${result.expected}</td>`;
+                html += `<td>${result.correct ? '<span class="success">✅ 정확</span>' : '<span class="error">❌ 오류</span>'}</td>`;
+                html += `</tr>`;
+            });
+            html += '</table>';
+            html += '</div>';
+
+            // 결론
+            html += '<div class="result-box">';
+            html += '<h2>📋 결론</h2>';
+            if (mainResult.dayGan === '무') {
+                html += '<p><span class="success">✅ 1989-10-06의 일간이 \'무(戊)\'로 정확히 계산됨</span></p>';
+                html += '<p>→ 일주 계산에는 문제가 없으므로, <strong>시주 계산 로직(getHourGapja)</strong>에 문제가 있을 가능성이 높음</p>';
+            } else {
+                html += `<p><span class="error">❌ 일간 계산 오류 발견: 계산값 '${mainResult.dayGan}' ≠ 예상값 '무'</span></p>';
+                html += '<p>→ 일주 계산 자체에 문제가 있으므로 이를 먼저 수정해야 함</p>';
+            }
+            html += '</div>';
+
+            output.innerHTML = html;
+            console.log('📋 콘솔 로그와 함께 위 결과를 분석해주세요!');
+        }
+
+        // 페이지 로드 시 실행
+        window.onload = displayResults;
+    </script>
+</body>
+</html>

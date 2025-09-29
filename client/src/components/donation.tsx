@@ -137,9 +137,10 @@ export default function Donation({ readingId }: DonationProps) {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
   const donationAmounts = [
-    { amount: 3000, label: '커피 한 잔', icon: '☕', description: '따뜻한 응원' },
-    { amount: 5000, label: '케이크 조각', icon: '🍰', description: '달콤한 후원' },
-    { amount: 10000, label: '브런치 세트', icon: '🥐', description: '든든한 지원' }
+    { amount: 3000, label: '커피 한 잔', icon: '☕', description: '따뜻한 응원', popular: false },
+    { amount: 5000, label: '점심 한 끼', icon: '🍱', description: '든든한 지원', popular: true },
+    { amount: 10000, label: '서비스 발전', icon: '🚀', description: '팀 지원', popular: false },
+    { amount: 20000, label: '프리미엄 지원', icon: '💝', description: '특별한 후원', popular: false }
   ];
 
   const createDonationMutation = useMutation({
@@ -196,17 +197,24 @@ export default function Donation({ readingId }: DonationProps) {
             </p>
           </div>
 
-          <div className="grid md:grid-cols-3 gap-4 mb-6">
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
             {donationAmounts.map((donation, index) => (
               <Button
                 key={index}
                 variant="outline"
                 size="lg"
-                className="h-auto p-4 flex-col space-y-2 border-2 hover:border-orange-300 hover:bg-orange-50 dark:hover:bg-orange-900/20 transition-all duration-200"
+                className={`h-auto p-4 flex-col space-y-2 border-2 hover:border-orange-300 hover:bg-orange-50 dark:hover:bg-orange-900/20 transition-all duration-200 relative ${
+                  donation.popular ? 'border-orange-400 bg-orange-50/50 dark:bg-orange-900/10' : ''
+                }`}
                 onClick={() => handleDonationClick(donation.amount)}
                 disabled={createDonationMutation.isPending}
                 data-testid={`button-donate-${donation.amount}`}
               >
+                {donation.popular && (
+                  <Badge className="absolute -top-2 -right-2 bg-orange-500 text-white text-xs">
+                    인기
+                  </Badge>
+                )}
                 <div className="text-2xl">{donation.icon}</div>
                 <div className="font-semibold">{donation.label}</div>
                 <div className="text-sm text-muted-foreground">{donation.description}</div>

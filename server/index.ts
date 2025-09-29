@@ -4,11 +4,42 @@ import { setupVite, serveStatic, log } from "./vite";
 import session from "express-session";
 import connectPGSimple from "connect-pg-simple";
 import pg from "pg";
+import { 
+  securityHeaders, 
+  corsOptions, 
+  apiRateLimit, 
+  validateInput, 
+  privacySafeLogging, 
+  secureErrorHandler,
+  sessionSecurity 
+} from "./security";
+import { performanceMonitoring, healthCheck, metricsEndpoint } from "./monitoring";
 
 const app = express();
-app.use(express.json());
-app.use(express.urlencoded({ extended: false }));
 
+// 보안 헤더 설정
+app.use(securityHeaders);
+
+// CORS 설정
+app.use(corsOptions);
+
+// Rate Limiting
+app.use(apiRateLimit);
+
+// Body parsing
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: false, limit: '10mb' }));
+
+// 입력값 검증 및 XSS 방지
+app.use(validateInput);
+
+// 개인정보 보호 로깅
+app.use(privacySafeLogging);
+
+// 성능 모니터링
+app.use(performanceMonitoring);
+
+// 환경 변수 검증
 if (!process.env.SESSION_SECRET) {
   throw new Error("SESSION_SECRET is not set");
 }
@@ -17,23 +48,21 @@ if (!process.env.DATABASE_URL) {
   throw new Error("DATABASE_URL is not set");
 }
 
+// 데이터베이스 연결
 const PGStore = connectPGSimple(session);
 const pool = new pg.Pool({
   connectionString: process.env.DATABASE_URL,
+  ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
 });
 
+// 보안 강화된 세션 설정
 app.use(
   session({
     store: new PGStore({
       pool: pool,
       createTableIfMissing: true,
     }),
-    secret: process.env.SESSION_SECRET,
-    resave: false,
-    saveUninitialized: false,
-    cookie: {
-      maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
-    },
+    ...sessionSecurity
   }),
 );
 
@@ -70,13 +99,12 @@ app.use((req, res, next) => {
 (async () => {
   const server = await registerRoutes(app);
 
-  app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
-    const status = err.status || err.statusCode || 500;
-    const message = err.message || "Internal Server Error";
+  // 헬스 체크 엔드포인트
+  app.get('/health', healthCheck);
+  app.get('/metrics', metricsEndpoint);
 
-    res.status(status).json({ message });
-    throw err;
-  });
+  // 보안 강화된 에러 핸들러
+  app.use(secureErrorHandler);
 
   // importantly only setup vite in development and after
   // setting up all the other routes so the catch-all route

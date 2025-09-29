@@ -6,6 +6,8 @@ import { createFortuneReadingSchema, createDonationSchema } from "@shared/schema
 import { calculatePremiumSaju } from "@/lib/premium-calculator";
 import { premiumToSajuData } from "@shared/adapters";
 import { analyzeFortune } from "@/lib/saju-calculator";
+import { sajuCalculationRateLimit, donationRateLimit } from "./security";
+import { cacheService } from "./cache";
 
 if (!process.env.STRIPE_SECRET_KEY) {
   console.warn('Warning: STRIPE_SECRET_KEY not found. Payment functionality will be disabled.');
@@ -16,13 +18,32 @@ const stripe = process.env.STRIPE_SECRET_KEY ? new Stripe(process.env.STRIPE_SEC
 }) : null;
 
 export async function registerRoutes(app: Express): Promise<Server> {
-  // Create fortune reading
-  app.post("/api/fortune-readings", async (req, res) => {
+  // Create fortune reading (Rate Limiting 적용)
+  app.post("/api/fortune-readings", sajuCalculationRateLimit, async (req, res) => {
     try {
       const validatedData = createFortuneReadingSchema.parse(req.body);
       
       // Generate session ID for anonymous users  
       const sessionId = (req as any).sessionID || `session_${Date.now()}_${Math.random()}`;
+      
+      // 캐시된 결과 확인
+      const cacheKey = {
+        year: validatedData.birthYear,
+        month: validatedData.birthMonth,
+        day: validatedData.birthDay,
+        hour: validatedData.birthHour,
+        minute: validatedData.birthMinute,
+        calendarType: validatedData.calendarType
+      };
+      
+      const cachedResult = await cacheService.getCachedSajuResult(cacheKey);
+      if (cachedResult) {
+        console.log('✅ 캐시된 사주 결과 사용');
+        return res.json({ 
+          readingId: cachedResult.readingId,
+          cached: true
+        });
+      }
       
       // Calculate saju pillars using premium engine
       const birthDate = new Date(
@@ -61,8 +82,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
         analysisResult
       });
 
+      // 결과를 캐시에 저장
+      await cacheService.cacheSajuResult(cacheKey, {
+        readingId: reading.id,
+        sajuData,
+        analysisResult,
+        premiumResult
+      });
+
       res.json({ 
-        readingId: reading.id
+        readingId: reading.id,
+        cached: false
       });
     } catch (error: any) {
       res.status(400).json({ message: "Error creating fortune reading: " + error.message });
@@ -83,8 +113,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Create donation payment intent
-  app.post("/api/create-donation", async (req, res) => {
+  // Create donation payment intent (Rate Limiting 적용)
+  app.post("/api/create-donation", donationRateLimit, async (req, res) => {
     if (!stripe) {
       return res.status(500).json({ message: "Payment service not available" });
     }

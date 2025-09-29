@@ -1,5 +1,3 @@
-# Overview
-
 This is a modern Korean fortune-telling (Saju) web application built as a full-stack Node.js project. The application provides traditional Korean fortune reading services with both free and premium tiers. Users can input their birth information to receive detailed Saju (Four Pillars) analysis based on traditional Korean astrology principles.
 
 # User Preferences

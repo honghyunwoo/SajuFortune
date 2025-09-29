@@ -164,10 +164,12 @@ function getMonthGapja(year: number, month: number, day: number, yearGan: 천간
     let sajuMonth = 12; // 기본값: 12월(축월) - 소한 이전
 
     for (let i = 0; i < 절기구간표.length; i++) {
-        const termDate = get절기(year, 절기구간표[i].term);
+        const termInfo = 절기구간표[i];
+        const termDate = get절기(year, termInfo.term);
+        console.log(`  [getMonthGapja] Term: ${termInfo.term}, Term Date: ${termDate.toISOString()}, Current Date: ${currentDate.toISOString()}`);
 
         if (currentDate >= termDate) {
-            sajuMonth = 절기구간표[i].sajuMonth;
+            sajuMonth = termInfo.sajuMonth;
         } else {
             break;
         }
@@ -182,6 +184,8 @@ function getMonthGapja(year: number, month: number, day: number, yearGan: 천간
     // 사주학 월을 배열 인덱스로 변환 (1월→0, 2월→1, ..., 12월→11)
     const sajuMonthIndex = (sajuMonth - 1) % 12;
     const monthGan = 월간매핑표[yearGan] ? 월간매핑표[yearGan][sajuMonthIndex] : null;
+
+    console.log(`  [getMonthGapja] Final sajuMonth: ${sajuMonth}, sajuMonthIndex: ${sajuMonthIndex}, yearGan: ${yearGan}, monthGan: ${monthGan}`);
 
     if (!monthGan) {
         console.error(`월간 계산 실패: yearGan=${yearGan}, sajuMonth=${sajuMonth}`);
@@ -218,6 +222,7 @@ function getDayGapja(year: number, month: number, day: number): number {
  */
 function getHourGapja(dayGan: 천간타입, hour: number): SajuPillar {
     const dayGanIndex = 천간.indexOf(dayGan);
+    console.log(`  [getHourGapja] dayGan: ${dayGan}, dayGanIndex: ${dayGanIndex}, hour: ${hour}`);
 
     // 정확한 시주 지지 계산 (23시-01시=자시, 01시-03시=축시, ...)
     let hourJiIndex: number;
@@ -234,6 +239,7 @@ function getHourGapja(dayGan: 천간타입, hour: number): SajuPillar {
     else if (hour >= 19 && hour <= 20) hourJiIndex = 10; // 술시
     else if (hour >= 21 && hour <= 22) hourJiIndex = 11; // 해시
     else hourJiIndex = 6; // 기본값 오시
+    console.log(`  [getHourGapja] hourJiIndex: ${hourJiIndex}, 지지[hourJiIndex]: ${지지[hourJiIndex]}`);
 
     // ⭐ 핵심 수정: 정확한 시주 천간 계산 (완성본의 수정된 매핑 테이블)
     const 일간별자시천간: { [key: number]: number } = {
@@ -241,11 +247,13 @@ function getHourGapja(dayGan: 천간타입, hour: number): SajuPillar {
         1: 2, 6: 2,  // 을(1), 경(6) → 병자시(2)
         2: 4, 7: 4,  // 병(2), 신(7) → 무자시(4)
         3: 8, 8: 8,  // 정(3), 임(8) → 임자시(8)
-        4: 8, 9: 8   // 무(4), 계(9) → 임자시(8) ← 이 부분이 핵심 수정!
+        4: 0, 9: 8   // 무(4) → 갑자시(0), 계(9) → 임자시(8) ← 이 부분이 핵심 수정!
     };
 
     const 자시천간 = 일간별자시천간[dayGanIndex];
+    console.log(`  [getHourGapja] 자시천간: ${자시천간}, 천간[자시천간]: ${천간[자시천간]}`);
     const hourGanIndex = (자시천간 + hourJiIndex) % 10;
+    console.log(`  [getHourGapja] hourGanIndex: ${hourGanIndex}, 천간[hourGanIndex]: ${천간[hourGanIndex]}`);
 
     return {
         gan: 천간[hourGanIndex],
@@ -435,3 +443,5 @@ export function getSajuElements(saju: SajuResult): string[] {
 // 기본 내보내기
 export { calculateManseoryeok as calculatePremiumManseoryeok };
 export type { SajuResult as PremiumSajuResult };
+export type { SinsalAnalysisResult } from '@shared/sinsal-data';
+export type { LunarDate } from '@shared/lunar-calculator';

@@ -279,10 +279,7 @@ export function getSupportedYearRange(): [number, number] {
     return [Math.min(...years), Math.max(...years)];
 }
 
-// Export for compatibility
-export const SOLAR_TERMS_DATA = 절기데이터;
-export const getSolarTerm = get절기;
-export const validateSolarTermData = validate절기Data;
+
 
 // 추가 익스포트 (프리미엄 계산기에서 필요)
 export { 절기구간표, 월간매핑표, SAJU_JI_MAPPING };

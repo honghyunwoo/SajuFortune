@@ -22,7 +22,9 @@ export default function FortuneForm() {
     birthDay: 1,
     birthHour: 12,
     birthMinute: 0,
-    calendarType: "solar"
+    calendarType: "solar",
+    serviceType: "free",
+    isPaid: false,
   });
 
   const createReadingMutation = useMutation({

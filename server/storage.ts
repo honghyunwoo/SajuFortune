@@ -1,124 +1,132 @@
-import { type User, type InsertUser, type FortuneReading, type InsertFortuneReading, type Donation, type InsertDonation } from "@shared/schema";
-import { randomUUID } from "crypto";
+import { neon } from "@neondatabase/serverless";
+import { drizzle } from "drizzle-orm/neon-http";
+import { eq } from "drizzle-orm";
+import * as schema from "@shared/schema";
+import {
+  type User,
+  type InsertUser,
+  type FortuneReading,
+  type InsertFortuneReading,
+  type Donation,
+  type InsertDonation,
+} from "@shared/schema";
+
+if (!process.env.DATABASE_URL) {
+  throw new Error("DATABASE_URL is not set");
+}
+
+const sql = neon(process.env.DATABASE_URL);
+const db = drizzle(sql, { schema });
 
 export interface IStorage {
   getUser(id: string): Promise<User | undefined>;
   getUserByUsername(username: string): Promise<User | undefined>;
   getUserByEmail(email: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
-  updateStripeCustomerId(userId: string, stripeCustomerId: string): Promise<User>;
-  
-  createFortuneReading(reading: InsertFortuneReading): Promise<FortuneReading>;
+  updateStripeCustomerId(
+    userId: string,
+    stripeCustomerId: string,
+  ): Promise<User>;
+
+  createFortuneReading(
+    reading: InsertFortuneReading,
+  ): Promise<FortuneReading>;
   getFortuneReading(id: string): Promise<FortuneReading | undefined>;
-  getFortuneReadingBySessionId(sessionId: string): Promise<FortuneReading | undefined>;
-  
+  getFortuneReadingBySessionId(
+    sessionId: string,
+  ): Promise<FortuneReading | undefined>;
+
   createDonation(donation: InsertDonation): Promise<Donation>;
   getDonationsByReadingId(readingId: string): Promise<Donation[]>;
   updateDonationPayment(paymentIntentId: string): Promise<Donation>;
 }
 
-export class MemStorage implements IStorage {
-  private users: Map<string, User>;
-  private fortuneReadings: Map<string, FortuneReading>;
-  private donations: Map<string, Donation>;
-
-  constructor() {
-    this.users = new Map();
-    this.fortuneReadings = new Map();
-    this.donations = new Map();
-  }
-
+export class DrizzleStorage implements IStorage {
   async getUser(id: string): Promise<User | undefined> {
-    return this.users.get(id);
+    const users = await db.select().from(schema.users).where(eq(schema.users.id, id)).limit(1);
+    return users[0];
   }
 
   async getUserByUsername(username: string): Promise<User | undefined> {
-    return Array.from(this.users.values()).find(
-      (user) => user.username === username,
-    );
+    const users = await db.select().from(schema.users).where(eq(schema.users.username, username)).limit(1);
+    return users[0];
   }
 
   async getUserByEmail(email: string): Promise<User | undefined> {
-    return Array.from(this.users.values()).find(
-      (user) => user.email === email,
-    );
+    const users = await db.select().from(schema.users).where(eq(schema.users.email, email)).limit(1);
+    return users[0];
   }
 
   async createUser(insertUser: InsertUser): Promise<User> {
-    const id = randomUUID();
-    const user: User = { 
-      ...insertUser, 
-      id, 
-      stripeCustomerId: null,
-      createdAt: new Date()
-    };
-    this.users.set(id, user);
-    return user;
+    const users = await db.insert(schema.users).values(insertUser).returning();
+    return users[0];
   }
 
-  async updateStripeCustomerId(userId: string, stripeCustomerId: string): Promise<User> {
-    const user = this.users.get(userId);
-    if (!user) {
-      throw new Error("User not found");
-    }
-    const updatedUser = { ...user, stripeCustomerId };
-    this.users.set(userId, updatedUser);
-    return updatedUser;
+  async updateStripeCustomerId(
+    userId: string,
+    stripeCustomerId: string,
+  ): Promise<User> {
+    const users = await db
+      .update(schema.users)
+      .set({ stripeCustomerId })
+      .where(eq(schema.users.id, userId))
+      .returning();
+    return users[0];
   }
 
-  async createFortuneReading(insertReading: InsertFortuneReading): Promise<FortuneReading> {
-    const id = randomUUID();
-    const reading: FortuneReading = {
-      ...insertReading,
-      userId: insertReading.userId || null,
-      id,
-      createdAt: new Date()
-    };
-    this.fortuneReadings.set(id, reading);
-    return reading;
+  async createFortuneReading(
+    insertReading: InsertFortuneReading,
+  ): Promise<FortuneReading> {
+    const readings = await db
+      .insert(schema.fortuneReadings)
+      .values(insertReading)
+      .returning();
+    return readings[0] as FortuneReading;
   }
 
   async getFortuneReading(id: string): Promise<FortuneReading | undefined> {
-    return this.fortuneReadings.get(id);
+    const readings = await db
+      .select()
+      .from(schema.fortuneReadings)
+      .where(eq(schema.fortuneReadings.id, id))
+      .limit(1);
+    return readings[0] as FortuneReading | undefined;
   }
 
-  async getFortuneReadingBySessionId(sessionId: string): Promise<FortuneReading | undefined> {
-    return Array.from(this.fortuneReadings.values()).find(
-      (reading) => reading.sessionId === sessionId,
-    );
+  async getFortuneReadingBySessionId(
+    sessionId: string,
+  ): Promise<FortuneReading | undefined> {
+    const readings = await db
+      .select()
+      .from(schema.fortuneReadings)
+      .where(eq(schema.fortuneReadings.sessionId, sessionId))
+      .limit(1);
+    return readings[0] as FortuneReading | undefined;
   }
 
   async createDonation(insertDonation: InsertDonation): Promise<Donation> {
-    const id = randomUUID();
-    const donation: Donation = {
-      ...insertDonation,
-      id,
-      createdAt: new Date()
-    };
-    this.donations.set(id, donation);
-    return donation;
+    const donations = await db
+      .insert(schema.donations)
+      .values(insertDonation)
+      .returning();
+    return donations[0] as Donation;
   }
 
   async getDonationsByReadingId(readingId: string): Promise<Donation[]> {
-    return Array.from(this.donations.values()).filter(
-      (donation) => donation.readingId === readingId && donation.isPaid
-    );
+    return db
+      .select()
+      .from(schema.donations)
+      .where(eq(schema.donations.readingId, readingId)) as Promise<Donation[]>;
   }
 
   async updateDonationPayment(paymentIntentId: string): Promise<Donation> {
-    const donation = Array.from(this.donations.values()).find(
-      (d) => d.paymentIntentId === paymentIntentId
-    );
-    if (!donation) {
-      throw new Error("Donation not found");
-    }
-    const updatedDonation = { 
-      ...donation, 
-      isPaid: true 
-    };
-    this.donations.set(donation.id, updatedDonation);
-    return updatedDonation;
+    const donations = await db
+      .update(schema.donations)
+      .set({ isPaid: true })
+      .where(eq(schema.donations.paymentIntentId, paymentIntentId))
+      .returning();
+    return donations[0] as Donation;
   }
 }
 
-export const storage = new MemStorage();
+export const storage = new DrizzleStorage();

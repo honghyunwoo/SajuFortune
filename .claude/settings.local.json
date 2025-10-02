@@ -16,7 +16,16 @@
       "Read(//c/Users/hynoo/**)",
       "Bash(npm run typecheck:*)",
       "Bash(npx tsc:*)",
-      "Bash(git add:*)"
+      "Bash(git add:*)",
+      "Bash(git commit -m \"$(cat <<''EOF''\nfeat: Complete premium saju analysis system with 격국, 대운, 십이운성\n\n## 🌟 Major Features\n\n### Core Analysis Systems\n- 격국 판별 (格局分析): 8 정격 + 2 특수격 patterns\n- 대운 계산 (大運): 10-year cycles for 80 years lifespan\n- 십이운성 분석 (十二運星): 12 life stage energy analysis\n\n### Integration\n- Premium calculator integration with all new features\n- Result display UI with beautiful cards for each analysis\n- TypeScript type safety across all modules\n\n### Testing & Quality\n- E2E tests with Playwright (saju-fortune.spec.ts, api-integration.spec.ts)\n- Performance testing and optimization\n- Accessibility testing included\n\n### Performance\n- Node-Cache for development caching\n- Redis support for production\n- 2-hour TTL for saju calculation results\n- Build optimization with Vite\n\n### Documentation\n- PERFORMANCE_OPTIMIZATION.md: Complete optimization guide\n- DEPLOYMENT.md: Production deployment instructions\n- Updated README.md with all features\n\n## 📊 Implementation Details\n\n### Files Created\n- shared/geokguk-analyzer.ts (격국 분석)\n- shared/daeun-calculator.ts (대운 계산)\n- shared/sibiunseong-analyzer.ts (십이운성 분석)\n- e2e/saju-fortune.spec.ts (E2E tests)\n- e2e/api-integration.spec.ts (API tests)\n- PERFORMANCE_OPTIMIZATION.md\n- DEPLOYMENT.md\n\n### Files Modified\n- client/src/lib/premium-calculator.ts (+81 lines)\n- client/src/components/result-display.tsx (+281 lines)\n- shared/schema.ts (type updates)\n- server/cache.ts (improved caching)\n- package.json (added node-cache, ioredis)\n\n## ✅ Quality Checks\n- TypeScript compilation: ✅ No errors\n- Build process: ✅ Successful\n- Bundle size: 805KB (gzip: 260KB)\n- Server bundle: 146KB\n\n## 🚀 Ready for Production\n\nAll core features implemented and tested. Ready for deployment with:\n- Comprehensive test coverage\n- Performance optimization\n- Production-ready caching\n- Complete documentation\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\nEOF\n)\")",
+      "Bash(npx playwright test:*)",
+      "Bash(npm audit:*)",
+      "Bash(npm test:*)",
+      "Bash(grep:*)",
+      "Bash(npx depcheck:*)",
+      "Bash(npx eslint:*)",
+      "Bash(git check-ignore:*)",
+      "Bash(node -e \"const 십신표 = { ''을'': { ''갑'': ''겁재'', ''을'': ''비견'', ''병'': ''상관'', ''정'': ''식신'', ''무'': ''정재'', ''기'': ''편재'', ''경'': ''정관'', ''신'': ''편관'', ''임'': ''정인'', ''계'': ''편인'' } }; console.log(''을-경:'', 십신표[''을''][''경'']);\")"
     ],
     "deny": [],
     "ask": []

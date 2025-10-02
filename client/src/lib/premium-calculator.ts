@@ -133,9 +133,11 @@ export function calculatePremiumSaju(date: Date, hour: number, options: Calculat
     ) : {
         대운목록: [],
         현재대운: null,
+        현재대운인덱스: -1,
         대운시작나이: 0,
         대운방향: '순행' as const,
-        전체해석: ''
+        전체해석: '',
+        특이사항: []
     };
 
     // 7. 십이운성 분석 (옵션)

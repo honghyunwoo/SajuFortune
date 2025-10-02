@@ -2,6 +2,9 @@ import { sql } from "drizzle-orm";
 import { pgTable, text, varchar, timestamp, integer, boolean, jsonb } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
+import type { 격국결과 } from "./geokguk-analyzer";
+import type { 대운결과 } from "./daeun-calculator";
+import type { 십이운성결과 } from "./sibiunseong-analyzer";
 
 // Saju Data Interfaces
 export interface SajuPillar {
@@ -76,9 +79,9 @@ export interface AnalysisResult {
   compatibility: Compatibility;
   monthlyFortune: MonthlyFortuneItem[];
   advice: Advice;
-  geokguk?: any; // 격국 분석 결과
-  daeun?: any; // 대운 결과
-  sibiunseong?: any; // 십이운성 결과
+  geokguk?: 격국결과; // 격국 분석 결과
+  daeun?: 대운결과; // 대운 결과
+  sibiunseong?: 십이운성결과; // 십이운성 결과
 }
 
 export const users = pgTable("users", {

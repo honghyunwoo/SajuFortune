@@ -1,24 +1,9 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import path from "path";
-import runtimeErrorOverlay from "@replit/vite-plugin-runtime-error-modal";
 
 export default defineConfig({
-  plugins: [
-    react(),
-    runtimeErrorOverlay(),
-    ...(process.env.NODE_ENV !== "production" &&
-    process.env.REPL_ID !== undefined
-      ? [
-          await import("@replit/vite-plugin-cartographer").then((m) =>
-            m.cartographer(),
-          ),
-          await import("@replit/vite-plugin-dev-banner").then((m) =>
-            m.devBanner(),
-          ),
-        ]
-      : []),
-  ],
+  plugins: [react()],
   resolve: {
     alias: {
       "@": path.resolve(import.meta.dirname, "client", "src"),
@@ -30,6 +15,26 @@ export default defineConfig({
   build: {
     outDir: path.resolve(import.meta.dirname, "dist/public"),
     emptyOutDir: true,
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          // React 관련 라이브러리
+          'react-vendor': ['react', 'react-dom'],
+          // UI 라이브러리
+          'ui-vendor': ['@radix-ui/react-accordion', '@radix-ui/react-alert-dialog', '@radix-ui/react-dialog'],
+          // 차트 및 PDF 라이브러리 (동적 import로 분리)
+          'chart-vendor': ['recharts'],
+          'pdf-vendor': ['jspdf'],
+          // 아이콘 라이브러리
+          'icons': ['lucide-react'],
+          // 명리학 데이터 (가장 큰 부분)
+          'astro-data': ['@shared/astro-data', '@shared/solar-terms', '@shared/sinsal-data']
+        }
+      }
+    },
+    chunkSizeWarningLimit: 500,
+    target: 'esnext',
+    minify: 'esbuild',
   },
   server: {
     fs: {

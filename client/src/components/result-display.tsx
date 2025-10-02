@@ -293,8 +293,8 @@ export default function ResultDisplay({ reading }: ResultDisplayProps) {
             </div>
             <div className="space-y-3">
               {analysisResult.daeun.대운목록.map((daeun: any, index: number) => {
-                const isCurrent = analysisResult.daeun.현재대운?.간 === daeun.간 &&
-                                 analysisResult.daeun.현재대운?.지 === daeun.지;
+                const isCurrent = analysisResult.daeun?.현재대운?.간 === daeun.간 &&
+                                 analysisResult.daeun?.현재대운?.지 === daeun.지;
                 return (
                   <div
                     key={index}

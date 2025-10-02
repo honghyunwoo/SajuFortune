@@ -35,9 +35,11 @@ export interface 대운주 {
 export interface 대운결과 {
     대운목록: 대운주[];
     현재대운: 대운주 | null;
+    현재대운인덱스: number;
     대운시작나이: number;
     대운방향: '순행' | '역행';
     전체해석: string;
+    특이사항: string[];
 }
 
 export interface 생년월일정보 {
@@ -60,7 +62,6 @@ export function calculate대운(
     월주지: 지지타입,
     현재나이?: number
 ): 대운결과 {
-    console.log('🎴 대운 계산 시작');
 
     const 년 = birthDate.getFullYear();
     const 월 = birthDate.getMonth() + 1;
@@ -84,25 +85,24 @@ export function calculate대운(
     );
 
     // 5. 현재 대운 찾기
-    const 현재대운 = 현재나이
-        ? find현재대운(대운목록, 현재나이)
-        : null;
+    const 현재대운정보 = 현재나이
+        ? find현재대운과인덱스(대운목록, 현재나이)
+        : { 대운: null, 인덱스: -1 };
 
     // 6. 전체 해석 생성
-    const 전체해석 = generate전체해석(대운방향, 대운시작나이, 현재대운);
+    const 전체해석 = generate전체해석(대운방향, 대운시작나이, 현재대운정보.대운);
 
-    console.log('✅ 대운 계산 완료:', {
-        대운방향,
-        대운시작나이,
-        현재대운: 현재대운 ? `${현재대운.간}${현재대운.지}` : '없음'
-    });
+    // 7. 특이사항 추출
+    const 특이사항 = extract특이사항(대운목록, 현재대운정보.대운);
 
     return {
         대운목록,
-        현재대운,
+        현재대운: 현재대운정보.대운,
+        현재대운인덱스: 현재대운정보.인덱스,
         대운시작나이,
         대운방향,
-        전체해석
+        전체해석,
+        특이사항
     };
 }
 
@@ -158,7 +158,6 @@ function calculate대운시작나이(birthDate: Date, 대운방향: '순행' | '
         // 최소 1살, 최대 10살로 제한
         return Math.max(1, Math.min(10, 대운시작));
     } catch (error) {
-        console.warn('⚠️ 절기 계산 실패, 기본값 5살 사용:', error);
         return 5; // 기본값
     }
 }
@@ -328,12 +327,45 @@ function generate대운해석(
 }
 
 /**
- * 현재 대운 찾기
+ * 현재 대운과 인덱스 찾기
  */
-function find현재대운(대운목록: 대운주[], 현재나이: number): 대운주 | null {
-    return 대운목록.find(
+function find현재대운과인덱스(
+    대운목록: 대운주[],
+    현재나이: number
+): { 대운: 대운주 | null; 인덱스: number } {
+    const 인덱스 = 대운목록.findIndex(
         대운 => 현재나이 >= 대운.시작나이 && 현재나이 <= 대운.종료나이
-    ) || null;
+    );
+    return {
+        대운: 인덱스 >= 0 ? 대운목록[인덱스] : null,
+        인덱스
+    };
+}
+
+/**
+ * 특이사항 추출
+ */
+function extract특이사항(대운목록: 대운주[], 현재대운: 대운주 | null): string[] {
+    const 특이사항: string[] = [];
+
+    // 대흉 대운 경고
+    const 대흉대운목록 = 대운목록.filter(d => d.길흉 === '대흉' || d.길흉 === '흉');
+    if (대흉대운목록.length > 0) {
+        특이사항.push(`주의가 필요한 대운이 ${대흉대운목록.length}개 있습니다.`);
+    }
+
+    // 대길 대운 강조
+    const 대길대운목록 = 대운목록.filter(d => d.길흉 === '대길');
+    if (대길대운목록.length > 0) {
+        특이사항.push(`좋은 기운의 대운이 ${대길대운목록.length}개 있습니다.`);
+    }
+
+    // 현재 대운이 흉한 경우
+    if (현재대운 && (현재대운.길흉 === '흉' || 현재대운.길흉 === '대흉')) {
+        특이사항.push('현재 대운 시기에는 신중한 행동이 필요합니다.');
+    }
+
+    return 특이사항;
 }
 
 /**

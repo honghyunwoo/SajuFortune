@@ -48,8 +48,23 @@ Thumbs.db
 # Test results
 /coverage
 /vitest-coverage
+/test-results
 *.html
 
 # Temporary files from root
 /attached_assets/
 /test-*.js
+*.png
+*.jpg
+*.jpeg
+*.gif
+*.bak
+*.old
+*.tmp
+*.cache
+*~
+.replit
+replit.md
+TASKS.md
+ADAPTER_MAPPING_SPEC.md
+MASTER_TASKS_VERIFICATION_REPORT.md

@@ -1,8 +1,8 @@
-import jsPDF from 'jspdf';
+// PDF 생성기는 동적 import로 로드하여 초기 번들 크기 최적화
 import type { FortuneReading, SajuPillar } from '@shared/schema';
 
 // Configure jsPDF for Korean text support with ASCII fallback
-const configureKoreanFont = (doc: jsPDF) => {
+const configureKoreanFont = (doc: any) => {
   try {
     // Use courier font which provides better character support than helvetica
     doc.setFont('courier', 'normal');
@@ -59,7 +59,7 @@ const KOREAN_TO_ENGLISH: { [key: string]: string } = {
   '직업 발전': 'Career Development'
 };
 
-const addKoreanText = (doc: jsPDF, text: string, x: number, y: number, options: any = {}) => {
+const addKoreanText = (doc: any, text: string, x: number, y: number, options: any = {}) => {
   const { fontSize = 12, maxWidth = 180, lineHeight = 7 } = options;
   
   try {
@@ -95,7 +95,7 @@ const addKoreanText = (doc: jsPDF, text: string, x: number, y: number, options: 
   }
 };
 
-const addHeader = (doc: jsPDF) => {
+const addHeader = (doc: any) => {
   // Add traditional pattern background
   doc.setFillColor(253, 243, 232); // Light cream background
   doc.rect(0, 0, 210, 30, 'F');
@@ -118,7 +118,7 @@ const addHeader = (doc: jsPDF) => {
   return 45; // Return next Y position
 };
 
-const addPersonalInfo = (doc: jsPDF, reading: FortuneReading, startY: number) => {
+const addPersonalInfo = (doc: any, reading: FortuneReading, startY: number) => {
   let currentY = startY;
   
   doc.setFontSize(16);
@@ -139,7 +139,7 @@ const addPersonalInfo = (doc: jsPDF, reading: FortuneReading, startY: number) =>
   return currentY + 10;
 };
 
-const addSajuPillars = (doc: jsPDF, reading: FortuneReading, startY: number) => {
+const addSajuPillars = (doc: any, reading: FortuneReading, startY: number) => {
   let currentY = startY;
   
   doc.setFontSize(16);
@@ -176,7 +176,7 @@ const addSajuPillars = (doc: jsPDF, reading: FortuneReading, startY: number) => 
   return currentY + 20;
 };
 
-const addElementsAnalysis = (doc: jsPDF, reading: FortuneReading, startY: number) => {
+const addElementsAnalysis = (doc: any, reading: FortuneReading, startY: number) => {
   let currentY = startY;
   
   doc.setFontSize(16);
@@ -215,7 +215,7 @@ const addElementsAnalysis = (doc: jsPDF, reading: FortuneReading, startY: number
   return currentY + 10;
 };
 
-const addPersonalityAnalysis = (doc: jsPDF, reading: FortuneReading, startY: number) => {
+const addPersonalityAnalysis = (doc: any, reading: FortuneReading, startY: number) => {
   let currentY = startY;
   
   doc.setFontSize(16);
@@ -228,7 +228,7 @@ const addPersonalityAnalysis = (doc: jsPDF, reading: FortuneReading, startY: num
   return currentY + 10;
 };
 
-const addTodayFortune = (doc: jsPDF, reading: FortuneReading, startY: number) => {
+const addTodayFortune = (doc: any, reading: FortuneReading, startY: number) => {
   let currentY = startY;
   
   doc.setFontSize(16);
@@ -248,7 +248,7 @@ const addTodayFortune = (doc: jsPDF, reading: FortuneReading, startY: number) =>
   return currentY + 10;
 };
 
-const addPremiumAnalysis = (doc: jsPDF, reading: FortuneReading, startY: number) => {
+const addPremiumAnalysis = (doc: any, reading: FortuneReading, startY: number) => {
   let currentY = startY;
   
   if (!reading.analysisResult.detailedAnalysis) return currentY;
@@ -355,7 +355,7 @@ const addPremiumAnalysis = (doc: jsPDF, reading: FortuneReading, startY: number)
   return currentY;
 };
 
-const addFooter = (doc: jsPDF, pageCount: number) => {
+const addFooter = (doc: any, pageCount: number) => {
   const pageHeight = doc.internal.pageSize.height;
   
   // Add decorative line
@@ -377,6 +377,7 @@ const addFooter = (doc: jsPDF, pageCount: number) => {
 
 export async function generatePDF(reading: FortuneReading): Promise<void> {
   try {
+    const { default: jsPDF } = await import('jspdf');
     const doc = new jsPDF();
     configureKoreanFont(doc);
     
@@ -419,6 +420,7 @@ export async function generatePDF(reading: FortuneReading): Promise<void> {
 
 // Alternative function for getting PDF as blob (useful for server-side processing)
 export async function generatePDFBlob(reading: FortuneReading): Promise<Blob> {
+  const { default: jsPDF } = await import('jspdf');
   const doc = new jsPDF();
   configureKoreanFont(doc);
   

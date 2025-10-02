@@ -18,9 +18,12 @@ let redisClient: Redis | null = null;
 
 if (process.env.REDIS_URL) {
   redisClient = new Redis(process.env.REDIS_URL, {
-    retryDelayOnFailover: 100,
     maxRetriesPerRequest: 3,
-    lazyConnect: true
+    lazyConnect: true,
+    retryStrategy(times) {
+      const delay = Math.min(times * 50, 2000);
+      return delay;
+    }
   });
 
   redisClient.on('error', (err) => {

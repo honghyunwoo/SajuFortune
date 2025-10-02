@@ -16,6 +16,9 @@ import {
 import { get절기, 절기구간표, 월간매핑표, SAJU_JI_MAPPING } from '@shared/solar-terms';
 import { convertSolarToLunar, getCyclicalDay, type LunarDate } from '@shared/lunar-calculator';
 import { analyze신살, type SinsalAnalysisResult, type SajuForSinsal } from '@shared/sinsal-data';
+import { analyze격국, type 격국결과 } from '@shared/geokguk-analyzer';
+import { calculate대운, type 대운결과 } from '@shared/daeun-calculator';
+import { analyze십이운성, type 십이운성결과 } from '@shared/sibiunseong-analyzer';
 
 // 타입 정의
 export interface SajuPillar {
@@ -50,6 +53,9 @@ export interface PremiumSajuAnalysis {
     elements: ElementAnalysis;
     tenGods: TenGodsAnalysis;
     sinsal: SinsalAnalysisResult;
+    geokguk: 격국결과;
+    daeun: 대운결과;
+    sibiunseong: 십이운성결과;
     lunar: LunarDate;
     cyclicalDay: number;
     precision: 'premium' | 'basic';
@@ -59,6 +65,11 @@ export interface PremiumSajuAnalysis {
 export interface CalculationOptions {
     includeSinsal?: boolean;
     includeLunar?: boolean;
+    includeGeokguk?: boolean;
+    includeDaeun?: boolean;
+    includeSibiunseong?: boolean;
+    currentAge?: number;
+    gender?: 'male' | 'female';
     precision?: 'premium' | 'basic';
 }
 
@@ -71,6 +82,11 @@ export function calculatePremiumSaju(date: Date, hour: number, options: Calculat
     const {
         includeSinsal = true,
         includeLunar = true,
+        includeGeokguk = true,
+        includeDaeun = true,
+        includeSibiunseong = true,
+        currentAge,
+        gender = 'male',
         precision = 'premium'
     } = options;
 
@@ -78,31 +94,75 @@ export function calculatePremiumSaju(date: Date, hour: number, options: Calculat
 
     // 1. 기본 사주팔자 계산
     const saju = calculateManseoryeok(date, hour);
-    
+
     // 2. 오행 분석
     const elements = analyzeElements(saju);
-    
+
     // 3. 십신 분석
     const tenGods = analyzeTenGods(saju);
-    
+
     // 4. 신살 분석 (옵션)
     const sinsal = includeSinsal ? analyze신살(saju as SajuForSinsal) : {
         total: 0, good: [], bad: [], mixed: [], summary: ''
     };
-    
-    // 5. 음양력 변환 (옵션)
+
+    // 5. 격국 분석 (옵션)
+    const geokguk = includeGeokguk ? analyze격국(saju) : {
+        격국명: '무격' as const,
+        격국종류: '무격' as const,
+        격국강도: 0,
+        용신: '목' as const,
+        희신: [],
+        기신: [],
+        격국함의: '',
+        상세해석: {
+            장점: [],
+            단점: [],
+            적합직업: [],
+            주의사항: []
+        }
+    };
+
+    // 6. 대운 계산 (옵션)
+    const daeun = includeDaeun ? calculate대운(
+        date,
+        gender,
+        saju.month.gan,
+        saju.month.ji,
+        currentAge
+    ) : {
+        대운목록: [],
+        현재대운: null,
+        대운시작나이: 0,
+        대운방향: '순행' as const,
+        전체해석: ''
+    };
+
+    // 7. 십이운성 분석 (옵션)
+    const sibiunseong = includeSibiunseong ? analyze십이운성(saju) : {
+        년주십이운성: { 운성: '장생' as const, 강도: 0, 해석: '' },
+        월주십이운성: { 운성: '장생' as const, 강도: 0, 해석: '' },
+        일주십이운성: { 운성: '장생' as const, 강도: 0, 해석: '' },
+        시주십이운성: { 운성: '장생' as const, 강도: 0, 해석: '' },
+        전체평가: { 주요운성: [], 생애에너지: 0, 종합해석: '' }
+    };
+
+    // 8. 음양력 변환 (옵션)
     const lunar = includeLunar ? convertSolarToLunar(date) : {
         year: 0, month: 0, day: 0, isLeap: false, cyclicalDay: 0
     };
-    
-    // 6. 60갑자 순환일
+
+    // 9. 60갑자 순환일
     const cyclicalDay = getCyclicalDay(date);
 
     const calculationTime = Date.now() - startTime;
-    
-    console.log('✅ 프리미엄 사주 계산 완료:', { 
+
+    console.log('✅ 프리미엄 사주 계산 완료:', {
         calculationTime: `${calculationTime}ms`,
         신살개수: sinsal.total,
+        격국: geokguk.격국명,
+        대운개수: daeun.대운목록.length,
+        십이운성평균: sibiunseong.전체평가.생애에너지,
         정밀도: precision
     });
 
@@ -111,6 +171,9 @@ export function calculatePremiumSaju(date: Date, hour: number, options: Calculat
         elements,
         tenGods,
         sinsal,
+        geokguk,
+        daeun,
+        sibiunseong,
         lunar,
         cyclicalDay,
         precision,

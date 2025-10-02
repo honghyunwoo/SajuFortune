@@ -1,21 +1,39 @@
+import 'dotenv/config';
 import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 import session from "express-session";
 import connectPGSimple from "connect-pg-simple";
 import pg from "pg";
-import { 
-  securityHeaders, 
-  corsOptions, 
-  apiRateLimit, 
-  validateInput, 
-  privacySafeLogging, 
+import compression from "compression";
+import {
+  securityHeaders,
+  corsOptions,
+  apiRateLimit,
+  validateInput,
+  privacySafeLogging,
   secureErrorHandler,
-  sessionSecurity 
+  sessionSecurity
 } from "./security";
 import { performanceMonitoring, healthCheck, metricsEndpoint } from "./monitoring";
 
 const app = express();
+
+// Trust proxy (프로덕션 환경에서 필요)
+if (process.env.NODE_ENV === 'production') {
+  app.set('trust proxy', 1);
+}
+
+// Response compression (성능 최적화)
+app.use(compression({
+  filter: (req, res) => {
+    if (req.headers['x-no-compression']) {
+      return false;
+    }
+    return compression.filter(req, res);
+  },
+  level: 6
+}));
 
 // 보안 헤더 설정
 app.use(securityHeaders);
@@ -120,11 +138,9 @@ app.use((req, res, next) => {
   // this serves both the API and the client.
   // It is the only port that is not firewalled.
   const port = parseInt(process.env.PORT || '5000', 10);
-  server.listen({
-    port,
-    host: "0.0.0.0",
-    reusePort: true,
-  }, () => {
-    log(`serving on port ${port}`);
+  const host = process.platform === 'win32' ? 'localhost' : '0.0.0.0';
+
+  server.listen(port, host, () => {
+    log(`serving on ${host}:${port}`);
   });
 })();

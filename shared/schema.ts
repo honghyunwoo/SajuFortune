@@ -76,6 +76,9 @@ export interface AnalysisResult {
   compatibility: Compatibility;
   monthlyFortune: MonthlyFortuneItem[];
   advice: Advice;
+  geokguk?: any; // 격국 분석 결과
+  daeun?: any; // 대운 결과
+  sibiunseong?: any; // 십이운성 결과
 }
 
 export const users = pgTable("users", {

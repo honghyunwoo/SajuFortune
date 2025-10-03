@@ -1,6 +1,15 @@
 /**
  * 한국천문연구원 API를 통해 24절기 데이터를 가져오는 스크립트
- * 2019-2030년 데이터를 가져와서 TypeScript 형식으로 변환
+ *
+ * 용도: 새로운 연도의 절기 데이터를 수집하거나 기존 데이터를 검증할 때 사용
+ * 실행: npx tsx scripts/fetch-solar-terms.ts
+ *
+ * 현재 상태: 2019-2026년 데이터 수집 완료 (shared/solar-terms.ts에 반영됨)
+ *
+ * 참고:
+ * - distbe/holidays API는 매년 새로운 데이터를 제공
+ * - 2027년 이후 데이터는 해당 연도가 가까워지면 수집 가능
+ * - 수집된 데이터는 수동으로 shared/solar-terms.ts에 복사해야 함
  */
 
 async function fetchSolarTermsData() {

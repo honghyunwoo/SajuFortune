@@ -17,6 +17,63 @@ import {
 } from "./security";
 import { performanceMonitoring, healthCheck, metricsEndpoint } from "./monitoring";
 
+// 환경변수 검증 (프로덕션에서 필수)
+function validateEnvironment() {
+  const requiredEnvVars = {
+    NODE_ENV: process.env.NODE_ENV,
+    SESSION_SECRET: process.env.SESSION_SECRET,
+  };
+
+  const missingVars: string[] = [];
+  const weakVars: string[] = [];
+
+  // 프로덕션 환경에서만 엄격한 검증
+  if (process.env.NODE_ENV === 'production') {
+    // SESSION_SECRET 필수 검증
+    if (!requiredEnvVars.SESSION_SECRET) {
+      missingVars.push('SESSION_SECRET');
+    } else if (requiredEnvVars.SESSION_SECRET === 'fallback-secret-change-in-production') {
+      weakVars.push('SESSION_SECRET (fallback값 사용 중 - 보안 위험!)');
+    } else if (requiredEnvVars.SESSION_SECRET.length < 32) {
+      weakVars.push('SESSION_SECRET (32자 이상 권장)');
+    }
+  }
+
+  // 오류 출력 및 서버 중단
+  if (missingVars.length > 0 || (weakVars.length > 0 && process.env.NODE_ENV === 'production')) {
+    console.error('\n🚨 환경변수 검증 실패!\n');
+
+    if (missingVars.length > 0) {
+      console.error('❌ 누락된 필수 환경변수:');
+      missingVars.forEach(v => console.error(`   - ${v}`));
+    }
+
+    if (weakVars.length > 0) {
+      console.error('\n⚠️ 보안에 취약한 환경변수:');
+      weakVars.forEach(v => console.error(`   - ${v}`));
+    }
+
+    console.error('\n📖 해결 방법:');
+    console.error('   1. .env 파일을 생성하고 필수 환경변수를 설정하세요.');
+    console.error('   2. SESSION_SECRET는 최소 32자 이상의 무작위 문자열을 사용하세요.');
+    console.error('   3. 예시: SESSION_SECRET=$(node -e "console.log(require(\'crypto\').randomBytes(32).toString(\'hex\')"))\n');
+
+    process.exit(1);
+  }
+
+  // 개발 환경에서 경고만 표시
+  if (weakVars.length > 0 && process.env.NODE_ENV !== 'production') {
+    console.warn('\n⚠️ 환경변수 경고 (개발 환경):');
+    weakVars.forEach(v => console.warn(`   - ${v}`));
+    console.warn('   프로덕션 배포 전에 반드시 수정하세요!\n');
+  }
+
+  console.log('✅ 환경변수 검증 완료');
+}
+
+// 서버 시작 전 환경변수 검증
+validateEnvironment();
+
 const app = express();
 
 // Trust proxy (프로덕션 환경에서 필요)

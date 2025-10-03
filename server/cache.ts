@@ -6,11 +6,13 @@
 import NodeCache from 'node-cache';
 import Redis from 'ioredis';
 
-// 메모리 캐시 (개발용)
+// 메모리 캐시 (개발용) - LRU 방식으로 메모리 누수 방지
 const memoryCache = new NodeCache({
   stdTTL: 3600, // 1시간
   checkperiod: 600, // 10분마다 만료된 항목 정리
-  useClones: false
+  useClones: false,
+  maxKeys: 1000, // 최대 1000개 키 저장 (메모리 누수 방지)
+  deleteOnExpire: true // 만료된 항목 자동 삭제
 });
 
 // Redis 클라이언트 (프로덕션용)
@@ -105,6 +107,49 @@ export class CacheService {
       }
     } catch (error) {
       console.error('Cache delete error:', error);
+      return false;
+    }
+  }
+
+  /**
+   * 패턴에 매칭되는 모든 키 삭제 (캐시 무효화)
+   */
+  async deletePattern(pattern: string): Promise<number> {
+    try {
+      if (this.isRedisAvailable && redisClient) {
+        const keys = await redisClient.keys(pattern);
+        if (keys.length > 0) {
+          const result = await redisClient.del(...keys);
+          return result;
+        }
+        return 0;
+      } else {
+        // Memory cache의 경우 모든 키를 순회하며 패턴 매칭
+        const allKeys = memoryCache.keys();
+        const regex = new RegExp(pattern.replace(/\*/g, '.*'));
+        const matchedKeys = allKeys.filter(key => regex.test(key));
+        return memoryCache.del(matchedKeys);
+      }
+    } catch (error) {
+      console.error('Cache deletePattern error:', error);
+      return 0;
+    }
+  }
+
+  /**
+   * 전체 캐시 초기화
+   */
+  async flush(): Promise<boolean> {
+    try {
+      if (this.isRedisAvailable && redisClient) {
+        await redisClient.flushdb();
+        return true;
+      } else {
+        memoryCache.flushAll();
+        return true;
+      }
+    } catch (error) {
+      console.error('Cache flush error:', error);
       return false;
     }
   }

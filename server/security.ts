@@ -7,6 +7,7 @@ import rateLimit from 'express-rate-limit';
 import helmet from 'helmet';
 import cors from 'cors';
 import { Request, Response, NextFunction } from 'express';
+import { v4 as uuidv4 } from 'uuid';
 
 // Rate Limiting 설정 (IP 기반 강화)
 export const createRateLimit = (windowMs: number, max: number, message: string) => {
@@ -144,25 +145,105 @@ export const privacySafeLogging = (req: Request, res: Response, next: NextFuncti
   next();
 };
 
+// 에러 타입별 HTTP 상태코드 매핑
+export const mapErrorToStatus = (err: any): number => {
+  // 명시적으로 설정된 상태코드가 있으면 사용
+  if (err.status || err.statusCode) {
+    return err.status || err.statusCode;
+  }
+
+  // 에러 메시지나 타입에 따른 매핑
+  const errorMessage = (err.message || '').toLowerCase();
+
+  // 400 Bad Request
+  if (
+    errorMessage.includes('invalid') ||
+    errorMessage.includes('잘못된') ||
+    errorMessage.includes('유효하지') ||
+    errorMessage.includes('validation') ||
+    err.name === 'ValidationError'
+  ) {
+    return 400;
+  }
+
+  // 401 Unauthorized
+  if (
+    errorMessage.includes('unauthorized') ||
+    errorMessage.includes('인증') ||
+    errorMessage.includes('로그인') ||
+    err.name === 'UnauthorizedError'
+  ) {
+    return 401;
+  }
+
+  // 403 Forbidden
+  if (
+    errorMessage.includes('forbidden') ||
+    errorMessage.includes('권한') ||
+    errorMessage.includes('접근') ||
+    err.name === 'ForbiddenError'
+  ) {
+    return 403;
+  }
+
+  // 404 Not Found
+  if (
+    errorMessage.includes('not found') ||
+    errorMessage.includes('찾을 수 없') ||
+    err.name === 'NotFoundError'
+  ) {
+    return 404;
+  }
+
+  // 409 Conflict
+  if (
+    errorMessage.includes('already exists') ||
+    errorMessage.includes('이미 존재') ||
+    errorMessage.includes('중복') ||
+    err.name === 'ConflictError'
+  ) {
+    return 409;
+  }
+
+  // 429 Too Many Requests
+  if (
+    errorMessage.includes('too many') ||
+    errorMessage.includes('너무 많은') ||
+    errorMessage.includes('rate limit') ||
+    err.name === 'TooManyRequestsError'
+  ) {
+    return 429;
+  }
+
+  // 500 Internal Server Error (기본값)
+  return 500;
+};
+
 // 에러 정보 보안 처리
 export const secureErrorHandler = (err: any, req: Request, res: Response, next: NextFunction) => {
   // 프로덕션에서는 상세 에러 정보 숨김
   const isDevelopment = process.env.NODE_ENV === 'development';
-  
+
+  // HTTP 상태코드 자동 매핑
+  const statusCode = mapErrorToStatus(err);
+
   const errorResponse = {
     message: isDevelopment ? err.message : '서버 오류가 발생했습니다.',
-    ...(isDevelopment && { stack: err.stack })
+    statusCode,
+    ...(isDevelopment && { stack: err.stack, name: err.name })
   };
-  
+
   // 에러 로깅 (민감한 정보 제외)
   console.error(`[ERROR] ${req.method} ${req.path}:`, {
+    name: err.name,
     message: err.message,
+    statusCode,
     timestamp: new Date().toISOString(),
     userAgent: req.get('User-Agent'),
     ip: req.ip
   });
-  
-  res.status(err.status || 500).json(errorResponse);
+
+  res.status(statusCode).json(errorResponse);
 };
 
 // 세션 보안 강화
@@ -177,5 +258,7 @@ export const sessionSecurity = {
     maxAge: 30 * 24 * 60 * 60 * 1000, // 30일
     sameSite: 'strict' as const // CSRF 방지
   },
-  rolling: true // 활동 시 세션 갱신
+  rolling: true, // 활동 시 세션 갱신
+  // UUID v4 기반 예측 불가능한 세션 ID 생성 (DoS 공격 방어)
+  genid: () => uuidv4()
 };

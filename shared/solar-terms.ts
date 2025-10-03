@@ -2,6 +2,11 @@
  * 한국 전통 사주학 정밀 24절기 데이터
  * 완성본에서 검증된 천문학적 정확도 (분/초 단위)
  * 데이터 출처: 한국천문연구원 기준
+ *
+ * ⚠️ 타임존 주의사항:
+ * - 모든 Date 객체는 KST(UTC+9) 기준으로 저장됨
+ * - JavaScript Date는 로컬 타임존을 사용하므로 해외 사용자는 timezone-utils.ts 사용 필수
+ * - 절기 비교 시 반드시 KST로 정규화하여 비교할 것
  */
 
 // 24절기 이름 상수
@@ -379,6 +384,10 @@ const SAJU_JI_MAPPING = [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 0, 1] as const;
  * @param year 연도
  * @param termName 절기명
  * @returns 절기 Date 객체 (KST 기준)
+ *
+ * ⚠️ 타임존 주의:
+ * 반환되는 Date 객체는 JavaScript 네이티브 Date이므로 로컬 타임존의 영향을 받습니다.
+ * 해외 사용자의 경우 timezone-utils.ts의 normalizeToKST() 함수로 정규화하여 사용하세요.
  */
 export function get절기(year: number, termName: SolarTermName): Date {
     if (절기데이터[year] && 절기데이터[year][termName]) {

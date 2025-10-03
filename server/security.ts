@@ -8,7 +8,7 @@ import helmet from 'helmet';
 import cors from 'cors';
 import { Request, Response, NextFunction } from 'express';
 
-// Rate Limiting 설정
+// Rate Limiting 설정 (IP 기반 강화)
 export const createRateLimit = (windowMs: number, max: number, message: string) => {
   return rateLimit({
     windowMs,
@@ -16,7 +16,20 @@ export const createRateLimit = (windowMs: number, max: number, message: string) 
     message: { error: message },
     standardHeaders: true,
     legacyHeaders: false,
+    // IP 기반 Rate Limiting (DoS 공격 방어)
+    keyGenerator: (req: Request) => {
+      // X-Forwarded-For 헤더 또는 실제 IP 사용
+      return req.ip || req.socket.remoteAddress || 'unknown';
+    },
+    // 예측 불가능한 세션 ID로 보완
+    skip: (req: Request) => {
+      // Health check는 Rate Limiting 제외
+      return req.path === '/health' || req.path === '/metrics';
+    },
     handler: (req: Request, res: Response) => {
+      // Rate Limiting 위반 로깅
+      console.warn(`[RATE_LIMIT] IP: ${req.ip}, Path: ${req.path}, Time: ${new Date().toISOString()}`);
+
       res.status(429).json({
         error: message,
         retryAfter: Math.round(windowMs / 1000)

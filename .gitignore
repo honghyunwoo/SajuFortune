@@ -68,3 +68,14 @@ replit.md
 TASKS.md
 ADAPTER_MAPPING_SPEC.md
 MASTER_TASKS_VERIFICATION_REPORT.md
+
+# Documentation cleanup patterns
+*_TEMP.md
+*_DRAFT.md
+*_WIP.md
+/docs/archive/
+*REPORT_*.md
+*_COMPLETION_REPORT.md
+*_AUDIT_REPORT.md
+*_VERIFICATION_REPORT.md
+*_ANALYSIS_TEMP.md

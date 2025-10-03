@@ -1,6 +1,7 @@
-import type { Express } from "express";
+import type { Express, Request } from "express";
 import { createServer, type Server } from "http";
 import Stripe from "stripe";
+import crypto from "crypto";
 import { storage } from "./storage";
 import { createFortuneReadingSchema, createDonationSchema } from "@shared/schema";
 import { calculatePremiumSaju } from "@/lib/premium-calculator";
@@ -8,6 +9,26 @@ import { premiumToSajuData } from "@shared/adapters";
 import { analyzeFortune } from "@/lib/saju-calculator";
 import { sajuCalculationRateLimit, donationRateLimit } from "./security";
 import { cacheService } from "./cache";
+import { sendContactFormEmail, sendAutoReplyEmail } from "./email";
+
+/**
+ * 보안 강화된 세션 ID 생성
+ * DoS 공격 방어: 예측 불가능한 세션 ID 생성
+ */
+function generateSecureSessionId(req: Request): string {
+  const timestamp = Date.now();
+  const randomBytes = crypto.randomBytes(16).toString('hex');
+  const ip = req.ip || 'unknown';
+  const userAgent = req.get('user-agent') || 'unknown';
+
+  // SHA256 해시로 예측 불가능한 ID 생성
+  const hash = crypto
+    .createHash('sha256')
+    .update(`${timestamp}-${randomBytes}-${ip}-${userAgent}`)
+    .digest('hex');
+
+  return `session_${hash.substring(0, 32)}`;
+}
 
 if (!process.env.STRIPE_SECRET_KEY) {
   console.warn('Warning: STRIPE_SECRET_KEY not found. Payment functionality will be disabled.');
@@ -23,8 +44,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const validatedData = createFortuneReadingSchema.parse(req.body);
       
-      // Generate session ID for anonymous users  
-      const sessionId = (req as any).sessionID || `session_${Date.now()}_${Math.random()}`;
+      // Generate session ID for anonymous users (보안 강화)
+      const sessionId = (req as any).sessionID || generateSecureSessionId(req);
       
       // 캐시된 결과 확인
       const cacheKey = {
@@ -198,6 +219,59 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(donations);
     } catch (error: any) {
       res.status(500).json({ message: "Error retrieving donations: " + error.message });
+    }
+  });
+
+  // Contact form submission
+  app.post("/api/contact", async (req, res) => {
+    try {
+      const { name, email, category, subject, message } = req.body;
+
+      // 유효성 검사
+      if (!name || !email || !category || !subject || !message) {
+        return res.status(400).json({
+          success: false,
+          message: "모든 필수 항목을 입력해주세요."
+        });
+      }
+
+      // 이메일 형식 검증
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(email)) {
+        return res.status(400).json({
+          success: false,
+          message: "올바른 이메일 주소를 입력해주세요."
+        });
+      }
+
+      // 관리자에게 문의 이메일 전송
+      const emailResult = await sendContactFormEmail({
+        name,
+        email,
+        category,
+        subject,
+        message
+      });
+
+      if (!emailResult.success) {
+        throw new Error(emailResult.error || "이메일 전송 실패");
+      }
+
+      // 사용자에게 자동 응답 이메일 전송
+      await sendAutoReplyEmail(email, name, category);
+
+      res.json({
+        success: true,
+        message: "문의가 성공적으로 접수되었습니다.",
+        messageId: emailResult.messageId
+      });
+
+    } catch (error: any) {
+      console.error("Contact form error:", error);
+      res.status(500).json({
+        success: false,
+        message: "문의 접수 중 오류가 발생했습니다."
+      });
     }
   });
 

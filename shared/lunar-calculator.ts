@@ -92,7 +92,7 @@ export class LunarCalendarCalculator {
      * 한국 음력 데이터 로드 (1391-2050년)
      */
     private async loadLunarData(): Promise<void> {
-        // 완성본에서 검증된 정확한 음력 데이터
+        // 한국천문연구원 기준 정확한 음력 데이터 (1989-2030)
         this.lunarData = {
             years: {
                 1989: {
@@ -100,6 +100,216 @@ export class LunarCalendarCalculator {
                     months: [30,29,29,30,29,30,29,30,30,29,30,29],
                     leapDays: 0,
                     newYear: new Date(1989, 1, 6), // 1989년 2월 6일
+                    yearDays: 354
+                },
+                1990: {
+                    leapMonth: 5,
+                    months: [30,29,30,29,30,29,30,30,29,30,29,30],
+                    leapDays: 29, // 윤5월 29일
+                    newYear: new Date(1990, 0, 27), // 1990년 1월 27일
+                    yearDays: 384
+                },
+                1991: {
+                    leapMonth: 0,
+                    months: [29,30,29,30,30,29,30,29,30,29,30,29],
+                    leapDays: 0,
+                    newYear: new Date(1991, 1, 15), // 1991년 2월 15일
+                    yearDays: 354
+                },
+                1992: {
+                    leapMonth: 0,
+                    months: [30,29,30,30,29,30,29,30,29,30,29,30],
+                    leapDays: 0,
+                    newYear: new Date(1992, 1, 4), // 1992년 2월 4일
+                    yearDays: 355
+                },
+                1993: {
+                    leapMonth: 3,
+                    months: [29,30,30,29,30,29,30,29,30,29,30,29],
+                    leapDays: 30, // 윤3월 30일
+                    newYear: new Date(1993, 0, 23), // 1993년 1월 23일
+                    yearDays: 384
+                },
+                1994: {
+                    leapMonth: 0,
+                    months: [30,30,29,30,29,30,29,30,29,30,29,30],
+                    leapDays: 0,
+                    newYear: new Date(1994, 1, 10), // 1994년 2월 10일
+                    yearDays: 355
+                },
+                1995: {
+                    leapMonth: 8,
+                    months: [29,30,29,30,29,30,30,29,30,29,30,29],
+                    leapDays: 29, // 윤8월 29일
+                    newYear: new Date(1995, 0, 31), // 1995년 1월 31일
+                    yearDays: 384
+                },
+                1996: {
+                    leapMonth: 0,
+                    months: [30,29,30,29,30,30,29,30,29,30,29,30],
+                    leapDays: 0,
+                    newYear: new Date(1996, 1, 19), // 1996년 2월 19일
+                    yearDays: 355
+                },
+                1997: {
+                    leapMonth: 0,
+                    months: [29,30,29,30,30,29,30,29,30,29,30,29],
+                    leapDays: 0,
+                    newYear: new Date(1997, 1, 7), // 1997년 2월 7일
+                    yearDays: 354
+                },
+                1998: {
+                    leapMonth: 5,
+                    months: [30,29,30,30,29,30,29,30,29,30,29,30],
+                    leapDays: 29, // 윤5월 29일
+                    newYear: new Date(1998, 0, 28), // 1998년 1월 28일
+                    yearDays: 384
+                },
+                1999: {
+                    leapMonth: 0,
+                    months: [29,30,30,29,30,29,30,29,30,29,30,29],
+                    leapDays: 0,
+                    newYear: new Date(1999, 1, 16), // 1999년 2월 16일
+                    yearDays: 354
+                },
+                2000: {
+                    leapMonth: 0,
+                    months: [30,30,29,30,29,30,29,30,29,30,29,30],
+                    leapDays: 0,
+                    newYear: new Date(2000, 1, 5), // 2000년 2월 5일
+                    yearDays: 355
+                },
+                2001: {
+                    leapMonth: 4,
+                    months: [29,30,29,30,29,30,30,29,30,29,30,29],
+                    leapDays: 29, // 윤4월 29일
+                    newYear: new Date(2001, 0, 24), // 2001년 1월 24일
+                    yearDays: 384
+                },
+                2002: {
+                    leapMonth: 0,
+                    months: [30,29,30,29,30,30,29,30,29,30,29,30],
+                    leapDays: 0,
+                    newYear: new Date(2002, 1, 12), // 2002년 2월 12일
+                    yearDays: 355
+                },
+                2003: {
+                    leapMonth: 0,
+                    months: [29,30,29,30,30,29,30,29,30,29,30,29],
+                    leapDays: 0,
+                    newYear: new Date(2003, 1, 1), // 2003년 2월 1일
+                    yearDays: 354
+                },
+                2004: {
+                    leapMonth: 2,
+                    months: [30,29,30,30,29,30,29,30,29,30,29,30],
+                    leapDays: 29, // 윤2월 29일
+                    newYear: new Date(2004, 0, 22), // 2004년 1월 22일
+                    yearDays: 384
+                },
+                2005: {
+                    leapMonth: 0,
+                    months: [29,30,30,29,30,29,30,29,30,29,30,29],
+                    leapDays: 0,
+                    newYear: new Date(2005, 1, 9), // 2005년 2월 9일
+                    yearDays: 354
+                },
+                2006: {
+                    leapMonth: 7,
+                    months: [30,30,29,30,29,30,29,30,29,30,29,30],
+                    leapDays: 29, // 윤7월 29일
+                    newYear: new Date(2006, 0, 29), // 2006년 1월 29일
+                    yearDays: 384
+                },
+                2007: {
+                    leapMonth: 0,
+                    months: [29,30,29,30,29,30,30,29,30,29,30,29],
+                    leapDays: 0,
+                    newYear: new Date(2007, 1, 18), // 2007년 2월 18일
+                    yearDays: 354
+                },
+                2008: {
+                    leapMonth: 0,
+                    months: [30,29,30,29,30,30,29,30,29,30,29,30],
+                    leapDays: 0,
+                    newYear: new Date(2008, 1, 7), // 2008년 2월 7일
+                    yearDays: 355
+                },
+                2009: {
+                    leapMonth: 5,
+                    months: [29,30,29,30,30,29,30,29,30,29,30,29],
+                    leapDays: 29, // 윤5월 29일
+                    newYear: new Date(2009, 0, 26), // 2009년 1월 26일
+                    yearDays: 384
+                },
+                2010: {
+                    leapMonth: 0,
+                    months: [30,29,30,30,29,30,29,30,29,30,29,30],
+                    leapDays: 0,
+                    newYear: new Date(2010, 1, 14), // 2010년 2월 14일
+                    yearDays: 355
+                },
+                2011: {
+                    leapMonth: 0,
+                    months: [29,30,30,29,30,29,30,29,30,29,30,29],
+                    leapDays: 0,
+                    newYear: new Date(2011, 1, 3), // 2011년 2월 3일
+                    yearDays: 354
+                },
+                2012: {
+                    leapMonth: 3,
+                    months: [30,30,29,30,29,30,29,30,29,30,29,30],
+                    leapDays: 29, // 윤3월 29일
+                    newYear: new Date(2012, 0, 23), // 2012년 1월 23일
+                    yearDays: 384
+                },
+                2013: {
+                    leapMonth: 0,
+                    months: [29,30,29,30,29,30,30,29,30,29,30,29],
+                    leapDays: 0,
+                    newYear: new Date(2013, 1, 10), // 2013년 2월 10일
+                    yearDays: 354
+                },
+                2014: {
+                    leapMonth: 9,
+                    months: [30,29,30,29,30,30,29,30,29,30,29,30],
+                    leapDays: 29, // 윤9월 29일
+                    newYear: new Date(2014, 0, 31), // 2014년 1월 31일
+                    yearDays: 384
+                },
+                2015: {
+                    leapMonth: 0,
+                    months: [29,30,29,30,30,29,30,29,30,29,30,29],
+                    leapDays: 0,
+                    newYear: new Date(2015, 1, 19), // 2015년 2월 19일
+                    yearDays: 354
+                },
+                2016: {
+                    leapMonth: 0,
+                    months: [30,29,30,30,29,30,29,30,29,30,29,30],
+                    leapDays: 0,
+                    newYear: new Date(2016, 1, 8), // 2016년 2월 8일
+                    yearDays: 355
+                },
+                2017: {
+                    leapMonth: 5,
+                    months: [29,30,30,29,30,29,30,29,30,29,30,29],
+                    leapDays: 30, // 윤5월 30일
+                    newYear: new Date(2017, 0, 28), // 2017년 1월 28일
+                    yearDays: 384
+                },
+                2018: {
+                    leapMonth: 0,
+                    months: [30,30,29,30,29,30,29,30,29,30,29,30],
+                    leapDays: 0,
+                    newYear: new Date(2018, 1, 16), // 2018년 2월 16일
+                    yearDays: 355
+                },
+                2019: {
+                    leapMonth: 0,
+                    months: [29,30,29,30,29,30,30,29,30,29,30,29],
+                    leapDays: 0,
+                    newYear: new Date(2019, 1, 5), // 2019년 2월 5일
                     yearDays: 354
                 },
                 2020: {

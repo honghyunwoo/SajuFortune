@@ -1,6 +1,7 @@
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import type { FortuneReading } from '@shared/schema';
+import { LegalWarningBanner } from './legal-warning-banner';
 
 interface ResultDisplayProps {
   reading: FortuneReading;
@@ -11,6 +12,9 @@ export default function ResultDisplay({ reading }: ResultDisplayProps) {
 
   return (
     <div className="space-y-8">
+      {/* Legal Warning Banner */}
+      <LegalWarningBanner variant="default" dismissible={true} showOnce={false} />
+
       {/* Saju Pillars */}
       <Card>
         <CardContent className="p-6">

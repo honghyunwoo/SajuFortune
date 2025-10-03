@@ -9,9 +9,9 @@
  * - 음양력 변환 정확도 98%+
  */
 
-import { 
+import {
     천간, 지지, 천간오행, 지지오행, 지장간, 십신표, 지장간가중치,
-    type 천간타입, type 지지타입, type 오행타입, type 십신타입 
+    type 천간타입, type 지지타입, type 오행타입, type 십신타입
 } from '@shared/astro-data';
 import { get절기, 절기구간표, 월간매핑표, SAJU_JI_MAPPING } from '@shared/solar-terms';
 import { convertSolarToLunar, getCyclicalDay, type LunarDate } from '@shared/lunar-calculator';
@@ -19,6 +19,7 @@ import { analyze신살, type SinsalAnalysisResult, type SajuForSinsal } from '@s
 import { analyze격국, type 격국결과 } from '@shared/geokguk-analyzer';
 import { calculate대운, type 대운결과 } from '@shared/daeun-calculator';
 import { analyze십이운성, type 십이운성결과 } from '@shared/sibiunseong-analyzer';
+import { normalizeToKST, debugTimezone } from '@shared/timezone-utils';
 
 // 타입 정의
 export interface SajuPillar {
@@ -92,8 +93,14 @@ export function calculatePremiumSaju(date: Date, hour: number, options: Calculat
 
     console.log('🔮 프리미엄 사주 계산 시작:', { date, hour, precision });
 
-    // 1. 기본 사주팔자 계산
-    const saju = calculateManseoryeok(date, hour);
+    // 타임존 정규화: 입력된 시간을 KST로 변환
+    const kstDate = normalizeToKST(date);
+    if (process.env.NODE_ENV === 'development') {
+        debugTimezone(kstDate);
+    }
+
+    // 1. 기본 사주팔자 계산 (KST 기준)
+    const saju = calculateManseoryeok(kstDate, hour);
 
     // 2. 오행 분석
     const elements = analyzeElements(saju);
@@ -123,9 +130,9 @@ export function calculatePremiumSaju(date: Date, hour: number, options: Calculat
         }
     };
 
-    // 6. 대운 계산 (옵션)
+    // 6. 대운 계산 (옵션) - KST 기준
     const daeun = includeDaeun ? calculate대운(
-        date,
+        kstDate,
         gender,
         saju.month.gan,
         saju.month.ji,
@@ -149,13 +156,13 @@ export function calculatePremiumSaju(date: Date, hour: number, options: Calculat
         전체평가: { 주요운성: [], 생애에너지: 0, 종합해석: '' }
     };
 
-    // 8. 음양력 변환 (옵션)
-    const lunar = includeLunar ? convertSolarToLunar(date) : {
+    // 8. 음양력 변환 (옵션) - KST 기준
+    const lunar = includeLunar ? convertSolarToLunar(kstDate) : {
         year: 0, month: 0, day: 0, isLeap: false, cyclicalDay: 0
     };
 
-    // 9. 60갑자 순환일
-    const cyclicalDay = getCyclicalDay(date);
+    // 9. 60갑자 순환일 - KST 기준
+    const cyclicalDay = getCyclicalDay(kstDate);
 
     const calculationTime = Date.now() - startTime;
 

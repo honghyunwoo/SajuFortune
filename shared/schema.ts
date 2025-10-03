@@ -135,11 +135,11 @@ export const insertFortuneReadingSchema = createInsertSchema(fortuneReadings).om
 
 export const createFortuneReadingSchema = z.object({
   gender: z.enum(["male", "female"]),
-  birthYear: z.number().min(1900).max(new Date().getFullYear()),
-  birthMonth: z.number().min(1).max(12),
-  birthDay: z.number().min(1).max(31),
-  birthHour: z.number().min(0).max(23),
-  birthMinute: z.number().min(0).max(59),
+  birthYear: z.number().int().min(1900).max(new Date().getFullYear()),
+  birthMonth: z.number().int().min(1).max(12),
+  birthDay: z.number().int().min(1).max(31),
+  birthHour: z.number().int().min(0).max(23),
+  birthMinute: z.number().int().min(0).max(59),
   calendarType: z.enum(["solar", "lunar"]),
   serviceType: z.enum(["free", "premium"]).default("free"),
   isPaid: z.boolean().default(false),

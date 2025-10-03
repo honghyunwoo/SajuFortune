@@ -23,9 +23,21 @@ const CheckoutForm = ({ readingId }: { readingId: string }) => {
   const { toast } = useToast();
   const [, setLocation] = useLocation();
   const [isProcessing, setIsProcessing] = useState(false);
+  const [agreedToTerms, setAgreedToTerms] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    // 약관 동의 체크
+    if (!agreedToTerms) {
+      toast({
+        title: "약관 동의 필요",
+        description: "서비스 이용약관 및 법적 고지사항에 동의해주세요.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setIsProcessing(true);
 
     if (!stripe || !elements) {
@@ -61,12 +73,42 @@ const CheckoutForm = ({ readingId }: { readingId: string }) => {
       <div className="bg-muted/10 p-4 rounded-lg space-y-4">
         <PaymentElement />
       </div>
-      
-      <Button 
-        type="submit" 
-        className="w-full" 
+
+      {/* 약관 동의 체크박스 */}
+      <div className="bg-amber-50 border-2 border-amber-300 p-4 rounded-lg">
+        <div className="flex items-start space-x-3">
+          <input
+            type="checkbox"
+            id="terms-agreement"
+            checked={agreedToTerms}
+            onChange={(e) => setAgreedToTerms(e.target.checked)}
+            className="mt-1 h-4 w-4 rounded border-amber-400 text-primary focus:ring-primary"
+            data-testid="checkbox-terms"
+          />
+          <label htmlFor="terms-agreement" className="text-sm text-amber-900 cursor-pointer">
+            <span className="font-semibold block mb-1">필수 동의 사항</span>
+            <span className="block">
+              본인은{" "}
+              <a
+                href="/terms-of-service"
+                target="_blank"
+                className="underline font-semibold hover:text-amber-700"
+              >
+                서비스 이용약관
+              </a>
+              (특히 제14조~제17조 법적 면책 조항)을 읽고 이해하였으며,
+              본 서비스가 <strong>엔터테인먼트 목적</strong>이고{" "}
+              <strong>의료·법률·재무 조언을 제공하지 않음</strong>을 확인하고 동의합니다.
+            </span>
+          </label>
+        </div>
+      </div>
+
+      <Button
+        type="submit"
+        className="w-full"
         size="lg"
-        disabled={!stripe || isProcessing}
+        disabled={!stripe || isProcessing || !agreedToTerms}
         data-testid="button-pay"
       >
         {isProcessing ? (

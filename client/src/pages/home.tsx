@@ -429,10 +429,10 @@ export default function Home() {
             <div>
               <h4 className="font-semibold text-foreground mb-4">고객지원</h4>
               <ul className="space-y-2 text-sm">
-                <li><Link href="/" className="hover:text-foreground transition-colors">자주 묻는 질문</Link></li>
-                <li><Link href="/" className="hover:text-foreground transition-colors">이용약관</Link></li>
-                <li><Link href="/" className="hover:text-foreground transition-colors">개인정보처리방침</Link></li>
-                <li><Link href="/" className="hover:text-foreground transition-colors">문의하기</Link></li>
+                <li><Link href="/faq" className="hover:text-foreground transition-colors">자주 묻는 질문</Link></li>
+                <li><Link href="/contact" className="hover:text-foreground transition-colors">문의하기</Link></li>
+                <li><Link href="/refund-policy" className="hover:text-foreground transition-colors">환불 정책</Link></li>
+                <li><Link href="/disclaimer" className="hover:text-foreground transition-colors">면책 조항</Link></li>
               </ul>
             </div>
 
@@ -449,9 +449,16 @@ export default function Home() {
           <hr className="my-8 border-border" />
 
           <div className="flex flex-col md:flex-row justify-between items-center">
-            <p className="text-sm">
-              © {new Date().getFullYear()} 운명의 해답. All rights reserved.
-            </p>
+            <div className="text-sm">
+              <p className="mb-2">© {new Date().getFullYear()} 운명의 해답. All rights reserved.</p>
+              <div className="flex flex-wrap gap-3 text-xs">
+                <Link href="/terms-of-service" className="hover:text-foreground transition-colors">이용약관</Link>
+                <span>|</span>
+                <Link href="/privacy-policy" className="hover:text-foreground transition-colors">개인정보처리방침</Link>
+                <span>|</span>
+                <Link href="/cookie-policy" className="hover:text-foreground transition-colors">쿠키 정책</Link>
+              </div>
+            </div>
             <div className="flex space-x-4 mt-4 md:mt-0">
               <Link href="/" className="hover:text-foreground transition-colors">
                 <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">

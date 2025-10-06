@@ -11,6 +11,7 @@ import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogTrigger } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest } from '@/lib/queryClient';
+import { trackDonationClick, trackDonationComplete } from '@/lib/analytics';
 import { Coffee, Heart, Star, Gift } from 'lucide-react';
 
 const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLIC_KEY || 'pk_test_dummy');
@@ -166,14 +167,28 @@ export default function Donation({ readingId }: DonationProps) {
 
   const handleDonationClick = (amount: number) => {
     setSelectedAmount(amount);
+
+    // 후원 버튼 클릭 추적
+    trackDonationClick(amount);
+
     createDonationMutation.mutate({ amount });
   };
 
   const handleDonationSuccess = () => {
     setIsDialogOpen(false);
     setClientSecret('');
+
+    // 후원 완료 추적 (전환 이벤트)
+    if (selectedAmount) {
+      trackDonationComplete({
+        amount: selectedAmount,
+        method: 'card', // Stripe 카드 결제
+        transactionId: `donation_${readingId}_${Date.now()}`,
+      });
+    }
+
     setSelectedAmount(null);
-    
+
     // Show special thank you message
     toast({
       title: "🎉 후원 완료!",

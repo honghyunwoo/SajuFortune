@@ -7,6 +7,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import ResultDisplay from '@/components/result-display';
 import Donation from '@/components/donation';
 import { generatePDF } from '@/lib/pdf-generator';
+import { trackPdfDownload } from '@/lib/analytics';
 import { useToast } from '@/hooks/use-toast';
 import type { FortuneReading } from '@shared/schema';
 
@@ -22,9 +23,16 @@ export default function Results() {
 
   const handleDownloadPDF = async () => {
     if (!reading || !('id' in reading) || !reading.id) return;
-    
+
     try {
       await generatePDF(reading as FortuneReading);
+
+      // PDF 다운로드 추적
+      trackPdfDownload({
+        gender: reading.gender as 'male' | 'female',
+        birthYear: reading.birthYear,
+      });
+
       toast({
         title: "PDF 생성 완료",
         description: "사주풀이 결과가 다운로드되었습니다.",

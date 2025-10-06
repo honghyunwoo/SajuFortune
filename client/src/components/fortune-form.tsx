@@ -9,12 +9,14 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
+import { trackSajuCalculation } from "@/lib/analytics";
 import { Lock } from "lucide-react";
 import type { CreateFortuneReading } from "@shared/schema";
 
 export default function FortuneForm() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
+  const [submittedAt, setSubmittedAt] = useState<number>(0);
   const [formData, setFormData] = useState<CreateFortuneReading>({
     gender: "male",
     birthYear: 2000,
@@ -33,6 +35,14 @@ export default function FortuneForm() {
       return response.json();
     },
     onSuccess: (data) => {
+      // 사주 계산 완료 추적 (소요 시간 계산)
+      const calculationTime = Date.now() - submittedAt;
+      trackSajuCalculation({
+        gender: formData.gender,
+        birthYear: formData.birthYear,
+        calculationTime,
+      });
+
       setLocation(`/results/${data.readingId}`);
     },
     onError: (error: Error) => {
@@ -46,6 +56,7 @@ export default function FortuneForm() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    setSubmittedAt(Date.now()); // 제출 시간 기록
     createReadingMutation.mutate(formData);
   };
 

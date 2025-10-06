@@ -445,6 +445,32 @@ kubectl get pods -l app=saju-fortune
 - **이슈 트래커**: [GitHub Issues](https://github.com/your-username/saju-fortune/issues)
 - **프로젝트 문서**: 8개의 상세 가이드 참조
 
+## 📂 프로젝트 문서 구조
+
+### 루트 디렉토리
+- [README.md](./README.md) - 프로젝트 메인 문서
+- [DEPLOYMENT.md](./DEPLOYMENT.md) - 배포 가이드
+- [PRODUCTION_CHECKLIST.md](./PRODUCTION_CHECKLIST.md) - 프로덕션 체크리스트
+- [PROJECT_ROADMAP.md](./PROJECT_ROADMAP.md) - 프로젝트 완료 로드맵
+- [FILE_CLEANUP_PLAN.md](./FILE_CLEANUP_PLAN.md) - 파일 정리 계획
+
+### docs/ - 상세 문서
+- [BUSINESS_MODEL.md](./docs/BUSINESS_MODEL.md) - 비즈니스 모델
+- [PRD_SajuFortune.md](./docs/PRD_SajuFortune.md) - 제품 요구사항 문서 (1,100+ 라인)
+- [PERFORMANCE_OPTIMIZATION.md](./docs/PERFORMANCE_OPTIMIZATION.md) - 성능 최적화 가이드
+- [API_SPECIFICATION.md](./docs/API_SPECIFICATION.md) - API 명세
+- [ARCHITECTURE_DECISIONS.md](./docs/ARCHITECTURE_DECISIONS.md) - 아키텍처 결정 기록
+- [CACHING_ARCHITECTURE.md](./docs/CACHING_ARCHITECTURE.md) - 캐싱 아키텍처
+- [COMPONENT_ARCHITECTURE.md](./docs/COMPONENT_ARCHITECTURE.md) - 컴포넌트 구조
+- [DATABASE_SCHEMA_DESIGN.md](./docs/DATABASE_SCHEMA_DESIGN.md) - 데이터베이스 설계
+- [ERROR_HANDLING_DESIGN.md](./docs/ERROR_HANDLING_DESIGN.md) - 에러 처리 설계
+- [SECURITY_ARCHITECTURE.md](./docs/SECURITY_ARCHITECTURE.md) - 보안 아키텍처
+
+### docs/reports/ - 검증 및 테스트 리포트
+- [E2E_TEST_REPORT.md](./docs/reports/E2E_TEST_REPORT.md) - E2E 테스트 결과 분석
+- [OPTIMIZATION_SUMMARY.md](./docs/reports/OPTIMIZATION_SUMMARY.md) - 최적화 작업 요약
+- [SYSTEM_INTEGRATION_REPORT.md](./docs/reports/SYSTEM_INTEGRATION_REPORT.md) - 시스템 통합 검증 (98% 준비)
+
 ## 🙏 감사의 말
 
 - 한국천문연구원의 정밀한 24절기 데이터 (1988-2030년)

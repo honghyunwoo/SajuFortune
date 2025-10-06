@@ -37,7 +37,11 @@
       "Bash(tree:*)",
       "Bash(find:*)",
       "Bash(cd:*)",
-      "Bash(npx update-browserslist-db:*)"
+      "Bash(npx update-browserslist-db:*)",
+      "Bash(PLAYWRIGHT_TEST=true npx playwright test --reporter=list)",
+      "Bash(cmd /c:*)",
+      "Bash(Month)",
+      "Bash(git mv:*)"
     ],
     "deny": [],
     "ask": []

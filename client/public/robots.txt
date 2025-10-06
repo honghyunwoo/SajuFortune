@@ -1,0 +1,32 @@
+# robots.txt for SajuFortune (운명의 해답)
+# https://sajufortune.com/robots.txt
+
+# Allow all crawlers
+User-agent: *
+Allow: /
+
+# Specific crawlers
+User-agent: Googlebot
+Allow: /
+
+User-agent: Bingbot
+Allow: /
+
+User-agent: Yandex
+Allow: /
+
+User-agent: NaverBot
+Allow: /
+
+User-agent: DaumBot
+Allow: /
+
+# Block sensitive or admin paths (if any in the future)
+# Disallow: /admin/
+# Disallow: /api/internal/
+
+# Sitemap location
+Sitemap: https://sajufortune.com/sitemap.xml
+
+# Crawl-delay for respectful crawling (optional)
+# Crawl-delay: 1

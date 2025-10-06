@@ -28,19 +28,20 @@ test.describe('사주풀이 전체 플로우', () => {
   });
 
   test('완전한 사주 정보 입력 및 결과 조회', async ({ page }) => {
-    // 성별 선택
-    await page.getByLabel(/남성|남자/i).click();
+    // 성별 선택 (data-testid 사용)
+    await page.getByTestId('radio-male').click();
 
-    // 생년월일 입력
-    await page.getByLabel(/년|연도/i).fill('1990');
-    await page.getByLabel(/월/i).fill('5');
-    await page.getByLabel(/일/i).fill('15');
+    // 생년월일 입력 (name 속성 사용)
+    await page.locator('[name="birthYear"]').fill('1990');
+    await page.locator('[name="birthMonth"]').fill('5');
+    await page.locator('[name="birthDay"]').fill('15');
 
-    // 시간 입력
-    await page.getByLabel(/시|시간/i).fill('14');
-    await page.getByLabel(/분/i).fill('30');
+    // 시간 입력 (name 속성 사용)
+    await page.locator('[name="birthHour"]').fill('14');
+    await page.locator('[name="birthMinute"]').fill('30');
 
     // 양력/음력 선택 (기본값이 양력이라고 가정)
+    await page.getByTestId('radio-solar').click();
 
     // 제출
     const submitButton = page.getByRole('button', { name: /운세 보기|조회|확인/i });
@@ -58,12 +59,12 @@ test.describe('사주풀이 전체 플로우', () => {
     await page.goto('/');
 
     // 사주 입력
-    await page.getByLabel(/남성|남자/i).click();
-    await page.getByLabel(/년|연도/i).fill('1985');
-    await page.getByLabel(/월/i).fill('10');
-    await page.getByLabel(/일/i).fill('20');
-    await page.getByLabel(/시|시간/i).fill('9');
-    await page.getByLabel(/분/i).fill('0');
+    await page.getByTestId('radio-male').click();
+    await page.locator('[name="birthYear"]').fill('1985');
+    await page.locator('[name="birthMonth"]').fill('10');
+    await page.locator('[name="birthDay"]').fill('20');
+    await page.locator('[name="birthHour"]').fill('9');
+    await page.locator('[name="birthMinute"]').fill('0');
 
     const submitButton = page.getByRole('button', { name: /운세 보기|조회|확인/i });
     await submitButton.click();
@@ -83,12 +84,12 @@ test.describe('사주풀이 전체 플로우', () => {
     await page.goto('/');
 
     // 사주 입력
-    await page.getByLabel(/남성|남자/i).click();
-    await page.getByLabel(/년|연도/i).fill('1990');
-    await page.getByLabel(/월/i).fill('3');
-    await page.getByLabel(/일/i).fill('21');
-    await page.getByLabel(/시|시간/i).fill('15');
-    await page.getByLabel(/분/i).fill('45');
+    await page.getByTestId('radio-male').click();
+    await page.locator('[name="birthYear"]').fill('1990');
+    await page.locator('[name="birthMonth"]').fill('3');
+    await page.locator('[name="birthDay"]').fill('21');
+    await page.locator('[name="birthHour"]').fill('15');
+    await page.locator('[name="birthMinute"]').fill('45');
 
     const submitButton = page.getByRole('button', { name: /운세 보기|조회|확인/i });
     await submitButton.click();
@@ -106,12 +107,12 @@ test.describe('사주풀이 전체 플로우', () => {
   test('사주 결과 페이지 - 대운 타임라인 표시 확인', async ({ page }) => {
     await page.goto('/');
 
-    await page.getByLabel(/여성|여자/i).click();
-    await page.getByLabel(/년|연도/i).fill('1995');
-    await page.getByLabel(/월/i).fill('7');
-    await page.getByLabel(/일/i).fill('10');
-    await page.getByLabel(/시|시간/i).fill('11');
-    await page.getByLabel(/분/i).fill('20');
+    await page.getByTestId('radio-female').click();
+    await page.locator('[name="birthYear"]').fill('1995');
+    await page.locator('[name="birthMonth"]').fill('7');
+    await page.locator('[name="birthDay"]').fill('10');
+    await page.locator('[name="birthHour"]').fill('11');
+    await page.locator('[name="birthMinute"]').fill('20');
 
     const submitButton = page.getByRole('button', { name: /운세 보기|조회|확인/i });
     await submitButton.click();
@@ -128,12 +129,12 @@ test.describe('사주풀이 전체 플로우', () => {
   test('사주 결과 페이지 - 십이운성 분석 표시 확인', async ({ page }) => {
     await page.goto('/');
 
-    await page.getByLabel(/남성|남자/i).click();
-    await page.getByLabel(/년|연도/i).fill('2000');
-    await page.getByLabel(/월/i).fill('1');
-    await page.getByLabel(/일/i).fill('1');
-    await page.getByLabel(/시|시간/i).fill('12');
-    await page.getByLabel(/분/i).fill('0');
+    await page.getByTestId('radio-male').click();
+    await page.locator('[name="birthYear"]').fill('2000');
+    await page.locator('[name="birthMonth"]').fill('1');
+    await page.locator('[name="birthDay"]').fill('1');
+    await page.locator('[name="birthHour"]').fill('12');
+    await page.locator('[name="birthMinute"]').fill('0');
 
     const submitButton = page.getByRole('button', { name: /운세 보기|조회|확인/i });
     await submitButton.click();
@@ -156,12 +157,12 @@ test.describe('사주풀이 전체 플로우', () => {
   test('사주 결과 페이지 - 오행 균형 분석 확인', async ({ page }) => {
     await page.goto('/');
 
-    await page.getByLabel(/남성|남자/i).click();
-    await page.getByLabel(/년|연도/i).fill('1988');
-    await page.getByLabel(/월/i).fill('12');
-    await page.getByLabel(/일/i).fill('25');
-    await page.getByLabel(/시|시간/i).fill('18');
-    await page.getByLabel(/분/i).fill('30');
+    await page.getByTestId("radio-male").click();
+    await page.locator("[name=\"birthYear\"]").fill('1988');
+    await page.locator("[name=\"birthMonth\"]").fill('12');
+    await page.locator("[name=\"birthDay\"]").fill('25');
+    await page.locator("[name=\"birthHour\"]").fill('18');
+    await page.locator("[name=\"birthMinute\"]").fill('30');
 
     const submitButton = page.getByRole('button', { name: /운세 보기|조회|확인/i });
     await submitButton.click();
@@ -182,12 +183,12 @@ test.describe('사주풀이 전체 플로우', () => {
   test('PDF 다운로드 기능 확인', async ({ page }) => {
     await page.goto('/');
 
-    await page.getByLabel(/남성|남자/i).click();
-    await page.getByLabel(/년|연도/i).fill('1992');
-    await page.getByLabel(/월/i).fill('6');
-    await page.getByLabel(/일/i).fill('15');
-    await page.getByLabel(/시|시간/i).fill('10');
-    await page.getByLabel(/분/i).fill('30');
+    await page.getByTestId("radio-male").click();
+    await page.locator("[name=\"birthYear\"]").fill('1992');
+    await page.locator("[name=\"birthMonth\"]").fill('6');
+    await page.locator("[name=\"birthDay\"]").fill('15');
+    await page.locator("[name=\"birthHour\"]").fill('10');
+    await page.locator("[name=\"birthMinute\"]").fill('30');
 
     const submitButton = page.getByRole('button', { name: /운세 보기|조회|확인/i });
     await submitButton.click();
@@ -218,12 +219,12 @@ test.describe('사주풀이 전체 플로우', () => {
   test('에러 처리 - 잘못된 날짜 입력', async ({ page }) => {
     await page.goto('/');
 
-    await page.getByLabel(/남성|남자/i).click();
-    await page.getByLabel(/년|연도/i).fill('2025'); // 미래 날짜
-    await page.getByLabel(/월/i).fill('13'); // 잘못된 월
-    await page.getByLabel(/일/i).fill('32'); // 잘못된 일
-    await page.getByLabel(/시|시간/i).fill('25'); // 잘못된 시간
-    await page.getByLabel(/분/i).fill('70'); // 잘못된 분
+    await page.getByTestId("radio-male").click();
+    await page.locator("[name=\"birthYear\"]").fill('2025'); // 미래 날짜
+    await page.locator("[name=\"birthMonth\"]").fill('13'); // 잘못된 월
+    await page.locator("[name=\"birthDay\"]").fill('32'); // 잘못된 일
+    await page.locator("[name=\"birthHour\"]").fill('25'); // 잘못된 시간
+    await page.locator("[name=\"birthMinute\"]").fill('70'); // 잘못된 분
 
     const submitButton = page.getByRole('button', { name: /운세 보기|조회|확인/i });
     await submitButton.click();
@@ -236,12 +237,12 @@ test.describe('사주풀이 전체 플로우', () => {
     await page.goto('/');
 
     // 폼 입력
-    await page.getByLabel(/남성|남자/i).click();
-    await page.getByLabel(/년|연도/i).fill('1990');
-    await page.getByLabel(/월/i).fill('5');
-    await page.getByLabel(/일/i).fill('15');
-    await page.getByLabel(/시|시간/i).fill('14');
-    await page.getByLabel(/분/i).fill('30');
+    await page.getByTestId("radio-male").click();
+    await page.locator("[name=\"birthYear\"]").fill('1990');
+    await page.locator("[name=\"birthMonth\"]").fill('5');
+    await page.locator("[name=\"birthDay\"]").fill('15');
+    await page.locator("[name=\"birthHour\"]").fill('14');
+    await page.locator("[name=\"birthMinute\"]").fill('30');
 
     const submitButton = page.getByRole('button', { name: /운세 보기|조회|확인/i });
     await submitButton.click();
@@ -252,7 +253,7 @@ test.describe('사주풀이 전체 플로우', () => {
     await page.goBack();
 
     // 입력한 값이 유지되는지 확인
-    await expect(page.getByLabel(/년|연도/i)).toHaveValue('1990');
+    await expect(page.locator("[name=\"birthYear\"]")).toHaveValue('1990');
   });
 
   test('다양한 생년월일 조합 테스트', async ({ page }) => {
@@ -266,12 +267,12 @@ test.describe('사주풀이 전체 플로우', () => {
     for (const testCase of testCases) {
       await page.goto('/');
 
-      await page.getByLabel(/남성|남자/i).click();
-      await page.getByLabel(/년|연도/i).fill(testCase.year);
-      await page.getByLabel(/월/i).fill(testCase.month);
-      await page.getByLabel(/일/i).fill(testCase.day);
-      await page.getByLabel(/시|시간/i).fill(testCase.hour);
-      await page.getByLabel(/분/i).fill(testCase.minute);
+      await page.getByTestId("radio-male").click();
+      await page.locator("[name=\"birthYear\"]").fill(testCase.year);
+      await page.locator("[name=\"birthMonth\"]").fill(testCase.month);
+      await page.locator("[name=\"birthDay\"]").fill(testCase.day);
+      await page.locator("[name=\"birthHour\"]").fill(testCase.hour);
+      await page.locator("[name=\"birthMinute\"]").fill(testCase.minute);
 
       const submitButton = page.getByRole('button', { name: /운세 보기|조회|확인/i });
       await submitButton.click();
@@ -296,12 +297,12 @@ test.describe('성능 테스트', () => {
   test('사주 계산 응답 시간', async ({ page }) => {
     await page.goto('/');
 
-    await page.getByLabel(/남성|남자/i).click();
-    await page.getByLabel(/년|연도/i).fill('1990');
-    await page.getByLabel(/월/i).fill('5');
-    await page.getByLabel(/일/i).fill('15');
-    await page.getByLabel(/시|시간/i).fill('14');
-    await page.getByLabel(/분/i).fill('30');
+    await page.getByTestId("radio-male").click();
+    await page.locator("[name=\"birthYear\"]").fill('1990');
+    await page.locator("[name=\"birthMonth\"]").fill('5');
+    await page.locator("[name=\"birthDay\"]").fill('15');
+    await page.locator("[name=\"birthHour\"]").fill('14');
+    await page.locator("[name=\"birthMinute\"]").fill('30');
 
     const startTime = Date.now();
     const submitButton = page.getByRole('button', { name: /운세 보기|조회|확인/i });

@@ -9,7 +9,7 @@ import cors from 'cors';
 import { Request, Response, NextFunction } from 'express';
 import { v4 as uuidv4 } from 'uuid';
 
-// Rate Limiting 설정 (IP 기반 강화)
+// Rate Limiting 설정 (IP 기반 강화, IPv6 지원)
 export const createRateLimit = (windowMs: number, max: number, message: string) => {
   return rateLimit({
     windowMs,
@@ -17,12 +17,9 @@ export const createRateLimit = (windowMs: number, max: number, message: string) 
     message: { error: message },
     standardHeaders: true,
     legacyHeaders: false,
-    // IP 기반 Rate Limiting (DoS 공격 방어)
-    keyGenerator: (req: Request) => {
-      // X-Forwarded-For 헤더 또는 실제 IP 사용
-      return req.ip || req.socket.remoteAddress || 'unknown';
-    },
-    // 예측 불가능한 세션 ID로 보완
+    // IP 기반 Rate Limiting (DoS 공격 방어, IPv6 지원)
+    // express-rate-limit가 자동으로 req.ip를 사용하며 IPv6를 올바르게 처리
+    // 커스텀 keyGenerator를 제거하여 기본 동작 사용
     skip: (req: Request) => {
       // Health check는 Rate Limiting 제외
       return req.path === '/health' || req.path === '/metrics';
@@ -39,26 +36,35 @@ export const createRateLimit = (windowMs: number, max: number, message: string) 
   });
 };
 
-// API Rate Limiting
-export const apiRateLimit = createRateLimit(
-  15 * 60 * 1000, // 15분
-  100, // 최대 100회 요청
-  '너무 많은 요청입니다. 잠시 후 다시 시도해주세요.'
-);
+// 테스트 환경 감지 (E2E 테스트를 위한 완화)
+const isTestEnv = process.env.NODE_ENV === 'test' || process.env.PLAYWRIGHT_TEST === 'true';
 
-// 사주 계산 Rate Limiting (더 엄격)
-export const sajuCalculationRateLimit = createRateLimit(
-  60 * 1000, // 1분
-  10, // 최대 10회 계산
-  '사주 계산 요청이 너무 많습니다. 잠시 후 다시 시도해주세요.'
-);
+// API Rate Limiting (테스트 환경에서는 완화)
+export const apiRateLimit = isTestEnv
+  ? (req: Request, res: Response, next: NextFunction) => next()  // 테스트: bypass
+  : createRateLimit(
+      15 * 60 * 1000, // 15분
+      100, // 최대 100회 요청
+      '너무 많은 요청입니다. 잠시 후 다시 시도해주세요.'
+    );
 
-// 후원 Rate Limiting
-export const donationRateLimit = createRateLimit(
-  60 * 60 * 1000, // 1시간
-  5, // 최대 5회 후원
-  '후원 요청이 너무 많습니다. 잠시 후 다시 시도해주세요.'
-);
+// 사주 계산 Rate Limiting (테스트 환경에서는 완화)
+export const sajuCalculationRateLimit = isTestEnv
+  ? (req: Request, res: Response, next: NextFunction) => next()  // 테스트: bypass
+  : createRateLimit(
+      60 * 1000, // 1분
+      10, // 최대 10회 계산
+      '사주 계산 요청이 너무 많습니다. 잠시 후 다시 시도해주세요.'
+    );
+
+// 후원 Rate Limiting (테스트 환경에서는 완화)
+export const donationRateLimit = isTestEnv
+  ? (req: Request, res: Response, next: NextFunction) => next()  // 테스트: bypass
+  : createRateLimit(
+      60 * 60 * 1000, // 1시간
+      5, // 최대 5회 후원
+      '후원 요청이 너무 많습니다. 잠시 후 다시 시도해주세요.'
+    );
 
 // Helmet 보안 헤더 설정
 export const securityHeaders = helmet({

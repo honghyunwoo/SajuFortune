@@ -33,7 +33,11 @@
       "Bash(for:*)",
       "Bash(do echo \"=== $year ===\")",
       "Bash(done)",
-      "Bash(npx tsx:*)"
+      "Bash(npx tsx:*)",
+      "Bash(tree:*)",
+      "Bash(find:*)",
+      "Bash(cd:*)",
+      "Bash(npx update-browserslist-db:*)"
     ],
     "deny": [],
     "ask": []

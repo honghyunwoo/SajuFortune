@@ -28,7 +28,7 @@ export default defineConfig({
             return 'ui-vendor';
           }
 
-          // PDF 라이브러리 (동적 import되므로 별도 청크)
+          // PDF 라이브러리 (lazy loaded, 별도 청크로 분리)
           if (id.includes('jspdf')) {
             return 'pdf-vendor';
           }
@@ -53,9 +53,14 @@ export default defineConfig({
             return 'purify-vendor';
           }
 
-          // html2canvas
+          // html2canvas (lazy loaded, 별도 청크로 분리)
           if (id.includes('html2canvas')) {
             return 'canvas-vendor';
+          }
+
+          // Stripe (후원 기능, lazy loaded)
+          if (id.includes('@stripe')) {
+            return 'stripe-vendor';
           }
 
           // 명리학 데이터 (큰 데이터)
@@ -74,6 +79,7 @@ export default defineConfig({
     target: 'esnext',
     minify: 'esbuild',
     sourcemap: false, // 프로덕션에서 sourcemap 비활성화로 크기 절감
+    cssCodeSplit: true, // CSS 코드 스플리팅 활성화
   },
   server: {
     fs: {

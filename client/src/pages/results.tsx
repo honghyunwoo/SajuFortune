@@ -6,7 +6,6 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import ResultDisplay from '@/components/result-display';
 import Donation from '@/components/donation';
-import { generatePDF } from '@/lib/pdf-generator';
 import { trackPdfDownload } from '@/lib/analytics';
 import { useToast } from '@/hooks/use-toast';
 import type { FortuneReading } from '@shared/schema';
@@ -25,6 +24,8 @@ export default function Results() {
     if (!reading || !('id' in reading) || !reading.id) return;
 
     try {
+      // PDF 생성기를 동적으로 로드 (lazy loading으로 초기 번들 크기 최적화)
+      const { generatePDF } = await import('@/lib/pdf-generator');
       await generatePDF(reading as FortuneReading);
 
       // PDF 다운로드 추적

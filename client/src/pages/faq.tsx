@@ -2,6 +2,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useState } from "react";
 import { ChevronDown, ChevronUp, Search, HelpCircle, CreditCard, Shield, RefreshCw } from "lucide-react";
 import { Input } from "@/components/ui/input";
+import SEOHead, { generateFAQSEO } from "@/components/seo-head";
 
 interface FAQItem {
   id: number;
@@ -193,6 +194,8 @@ export default function FAQ() {
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-5xl">
+      <SEOHead {...generateFAQSEO()} />
+
       <div className="text-center mb-8">
         <h1 className="text-4xl font-bold mb-3">자주 묻는 질문</h1>
         <p className="text-muted-foreground">

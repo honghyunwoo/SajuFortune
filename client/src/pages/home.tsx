@@ -6,12 +6,14 @@ import { Card, CardContent } from "@/components/ui/card";
 import FortuneForm from "@/components/fortune-form";
 import ServiceComparison from "@/components/service-comparison";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import SEOHead, { generateHomeSEO } from "@/components/seo-head";
 
 export default function Home() {
   const [showForm, setShowForm] = useState(false);
 
   return (
     <div className="bg-background text-foreground antialiased">
+      <SEOHead {...generateHomeSEO()} />
       {/* Navigation */}
       <nav className="bg-card border-b border-border sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">

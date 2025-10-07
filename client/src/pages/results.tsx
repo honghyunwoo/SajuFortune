@@ -8,6 +8,7 @@ import ResultDisplay from '@/components/result-display';
 import Donation from '@/components/donation';
 import { trackPdfDownload } from '@/lib/analytics';
 import { useToast } from '@/hooks/use-toast';
+import SEOHead, { generateSajuResultSEO } from '@/components/seo-head';
 import type { FortuneReading } from '@shared/schema';
 
 export default function Results() {
@@ -78,6 +79,18 @@ export default function Results() {
 
   return (
     <div className="min-h-screen bg-background">
+      {/* SEO Meta Tags */}
+      {reading && (
+        <SEOHead
+          {...generateSajuResultSEO({
+            gender: reading.gender as 'male' | 'female',
+            birthYear: reading.birthYear,
+            birthMonth: reading.birthMonth,
+            birthDay: reading.birthDay,
+          })}
+        />
+      )}
+
       {/* Header */}
       <div className="bg-card border-b border-border">
         <div className="max-w-4xl mx-auto px-4 py-4">

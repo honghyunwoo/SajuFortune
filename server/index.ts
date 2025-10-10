@@ -1,7 +1,6 @@
 import 'dotenv/config';
 import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
-import { registerBlogRoutes } from "./blog";
 import { registerCompatibilityRoutes } from "./compatibility";
 import { registerMonthlyFortuneRoutes } from "./monthly-fortune";
 import { registerSubscriptionRoutes } from "./subscription-simple";
@@ -184,9 +183,6 @@ app.use((req, res, next) => {
 
 (async () => {
   const server = await registerRoutes(app);
-
-  // 블로그 라우트 등록
-  registerBlogRoutes(app);
 
   // 궁합 분석 라우트 등록
   registerCompatibilityRoutes(app);

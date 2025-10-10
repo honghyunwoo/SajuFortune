@@ -396,6 +396,47 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  /**
+   * 블로그 포스트 목록 조회
+   * GET /api/blog/posts
+   */
+  app.get("/api/blog/posts", async (req, res) => {
+    try {
+      const { blogService } = await import('./blog');
+      const posts = await blogService.getAllPosts();
+      res.json(posts);
+    } catch (error: any) {
+      log.error('[Blog] Failed to get posts:', error);
+      res.status(500).json({
+        error: "블로그 포스트 목록을 불러오는데 실패했습니다."
+      });
+    }
+  });
+
+  /**
+   * 블로그 포스트 상세 조회
+   * GET /api/blog/posts/:slug
+   */
+  app.get("/api/blog/posts/:slug", async (req, res) => {
+    try {
+      const { blogService } = await import('./blog');
+      const post = await blogService.getPostBySlug(req.params.slug);
+
+      if (!post) {
+        return res.status(404).json({
+          error: "게시글을 찾을 수 없습니다."
+        });
+      }
+
+      res.json(post);
+    } catch (error: any) {
+      log.error('[Blog] Failed to get post:', error);
+      res.status(500).json({
+        error: "블로그 포스트를 불러오는데 실패했습니다."
+      });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

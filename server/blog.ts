@@ -1,17 +1,18 @@
 /**
- * 블로그 API 라우트
- * Markdown 파일 파싱 및 제공
+ * 블로그 서비스
+ *
+ * Markdown 기반 블로그 포스트 관리
+ * - gray-matter로 프론트매터 파싱
+ * - 파일 시스템 기반 콘텐츠 관리
+ * - 메모리 캐싱으로 성능 최적화
  */
 
 import fs from 'fs/promises';
 import path from 'path';
 import matter from 'gray-matter';
-import type { Express } from 'express';
+import { log } from './logger';
 
-const BLOG_CONTENT_DIR = path.join(process.cwd(), 'content', 'blog');
-
-interface BlogPostMeta {
-  slug: string;
+export interface BlogPostMetadata {
   title: string;
   description: string;
   author: string;
@@ -21,114 +22,130 @@ interface BlogPostMeta {
   image?: string;
 }
 
-interface BlogPostFull extends BlogPostMeta {
+export interface BlogPostSummary extends BlogPostMetadata {
+  slug: string;
+}
+
+export interface BlogPost extends BlogPostSummary {
   content: string;
 }
 
-/**
- * Markdown 파일에서 메타데이터 추출
- */
-async function parseBlogPost(filePath: string): Promise<BlogPostFull | null> {
-  try {
-    const fileContent = await fs.readFile(filePath, 'utf-8');
-    const { data, content } = matter(fileContent);
+const BLOG_CONTENT_DIR = path.join(process.cwd(), 'content', 'blog');
 
-    const slug = path.basename(filePath, '.md');
+// 메모리 캐시 (프로덕션에서는 Redis 사용 권장)
+let postsCache: BlogPostSummary[] | null = null;
+let postContentCache = new Map<string, BlogPost>();
 
-    return {
-      slug,
-      title: data.title || 'Untitled',
-      description: data.description || '',
-      author: data.author || '운명의 해답',
-      date: data.date || new Date().toISOString(),
-      category: data.category || '일반',
-      tags: data.tags || [],
-      image: data.image,
-      content,
-    };
-  } catch (error) {
-    console.error(`[Blog] Failed to parse ${filePath}:`, error);
-    return null;
-  }
-}
+class BlogService {
+  /**
+   * 모든 블로그 포스트 목록 조회 (메타데이터만)
+   */
+  async getAllPosts(): Promise<BlogPostSummary[]> {
+    // 캐시 확인
+    if (postsCache) {
+      return postsCache;
+    }
 
-/**
- * 모든 블로그 포스트 메타데이터 가져오기
- */
-async function getAllPosts(): Promise<BlogPostMeta[]> {
-  try {
-    const files = await fs.readdir(BLOG_CONTENT_DIR);
-    const mdFiles = files.filter(file => file.endsWith('.md'));
+    try {
+      // content/blog 디렉토리의 모든 .md 파일 읽기
+      const files = await fs.readdir(BLOG_CONTENT_DIR);
+      const mdFiles = files.filter(file => file.endsWith('.md'));
 
-    const posts = await Promise.all(
-      mdFiles.map(async (file) => {
+      const posts: BlogPostSummary[] = [];
+
+      for (const file of mdFiles) {
+        const slug = file.replace('.md', '');
         const filePath = path.join(BLOG_CONTENT_DIR, file);
-        const post = await parseBlogPost(filePath);
-        if (!post) return null;
+        const fileContent = await fs.readFile(filePath, 'utf-8');
 
-        // 메타데이터만 반환 (content 제외)
-        const { content, ...meta } = post;
-        return meta;
-      })
-    );
+        // gray-matter로 프론트매터 파싱
+        const { data } = matter(fileContent);
 
-    // null 제거 및 날짜순 정렬 (최신순)
-    return posts
-      .filter((post): post is BlogPostMeta => post !== null)
-      .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-  } catch (error) {
-    console.error('[Blog] Failed to load posts:', error);
-    return [];
+        posts.push({
+          slug,
+          title: data.title || 'Untitled',
+          description: data.description || '',
+          author: data.author || '운명의 해답',
+          date: data.date || new Date().toISOString().split('T')[0],
+          category: data.category || '기타',
+          tags: data.tags || [],
+          image: data.image,
+        });
+      }
+
+      // 날짜 순으로 정렬 (최신순)
+      posts.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+
+      // 캐시 저장
+      postsCache = posts;
+
+      log.info(`[Blog] Loaded ${posts.length} posts`);
+      return posts;
+    } catch (error: any) {
+      log.error('[Blog] Failed to load posts:', error);
+
+      // 디렉토리가 없으면 빈 배열 반환
+      if (error.code === 'ENOENT') {
+        log.warn('[Blog] Blog content directory not found, returning empty array');
+        return [];
+      }
+
+      throw error;
+    }
+  }
+
+  /**
+   * 특정 슬러그의 블로그 포스트 상세 조회
+   */
+  async getPostBySlug(slug: string): Promise<BlogPost | null> {
+    // 캐시 확인
+    if (postContentCache.has(slug)) {
+      return postContentCache.get(slug)!;
+    }
+
+    try {
+      const filePath = path.join(BLOG_CONTENT_DIR, `${slug}.md`);
+      const fileContent = await fs.readFile(filePath, 'utf-8');
+
+      // gray-matter로 프론트매터와 본문 분리
+      const { data, content } = matter(fileContent);
+
+      const post: BlogPost = {
+        slug,
+        title: data.title || 'Untitled',
+        description: data.description || '',
+        author: data.author || '운명의 해답',
+        date: data.date || new Date().toISOString().split('T')[0],
+        category: data.category || '기타',
+        tags: data.tags || [],
+        image: data.image,
+        content,
+      };
+
+      // 캐시 저장
+      postContentCache.set(slug, post);
+
+      log.info(`[Blog] Loaded post: ${slug}`);
+      return post;
+    } catch (error: any) {
+      if (error.code === 'ENOENT') {
+        log.warn(`[Blog] Post not found: ${slug}`);
+        return null;
+      }
+
+      log.error(`[Blog] Failed to load post ${slug}:`, error);
+      throw error;
+    }
+  }
+
+  /**
+   * 캐시 초기화 (새 포스트 추가 시 호출)
+   */
+  clearCache() {
+    postsCache = null;
+    postContentCache.clear();
+    log.info('[Blog] Cache cleared');
   }
 }
 
-/**
- * 특정 블로그 포스트 가져오기
- */
-async function getPostBySlug(slug: string): Promise<BlogPostFull | null> {
-  try {
-    const filePath = path.join(BLOG_CONTENT_DIR, `${slug}.md`);
-    return await parseBlogPost(filePath);
-  } catch (error) {
-    console.error(`[Blog] Failed to load post ${slug}:`, error);
-    return null;
-  }
-}
-
-/**
- * 블로그 라우트 등록
- */
-export function registerBlogRoutes(app: Express) {
-  // 모든 블로그 포스트 목록
-  app.get('/api/blog/posts', async (req, res) => {
-    try {
-      const posts = await getAllPosts();
-      res.json(posts);
-    } catch (error) {
-      console.error('[Blog] /api/blog/posts error:', error);
-      res.status(500).json({ error: 'Failed to load blog posts' });
-    }
-  });
-
-  // 특정 블로그 포스트 상세
-  app.get('/api/blog/posts/:slug', async (req, res) => {
-    try {
-      const { slug } = req.params;
-
-      // 보안: slug validation (파일 경로 traversal 방지)
-      if (!slug || slug.includes('..') || slug.includes('/')) {
-        return res.status(400).json({ error: 'Invalid slug' });
-      }
-
-      const post = await getPostBySlug(slug);
-      if (!post) {
-        return res.status(404).json({ error: 'Post not found' });
-      }
-
-      res.json(post);
-    } catch (error) {
-      console.error('[Blog] /api/blog/posts/:slug error:', error);
-      res.status(500).json({ error: 'Failed to load blog post' });
-    }
-  });
-}
+export const blogService = new BlogService();

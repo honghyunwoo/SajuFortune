@@ -3,7 +3,7 @@ import ReactDOM from "react-dom/client";
 import App from "./App.tsx";
 import "./index.css";
 import { initializeAnalytics } from "./lib/analytics";
-import { initKakaoSDK } from "./lib/kakao-share";
+import { initializeKakao } from "./lib/kakao-share";
 import "./i18n"; // i18n 초기화
 
 // Google Analytics 초기화
@@ -13,7 +13,7 @@ initializeAnalytics();
 // 실제 배포 시 환경변수로 관리 필요
 const KAKAO_JS_KEY = import.meta.env.VITE_KAKAO_JS_KEY || '';
 if (KAKAO_JS_KEY) {
-  initKakaoSDK(KAKAO_JS_KEY);
+  initializeKakao(KAKAO_JS_KEY);
 }
 
 ReactDOM.createRoot(document.getElementById("root")!).render(

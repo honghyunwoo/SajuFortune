@@ -1,12 +1,13 @@
 import { useParams } from 'wouter';
 import { useQuery } from '@tanstack/react-query';
 import { Link } from 'wouter';
-import { ArrowLeft, Download, Star, Coffee } from 'lucide-react';
+import { ArrowLeft, Download, Star, Coffee, Share2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import ResultDisplay from '@/components/result-display';
 import Donation from '@/components/donation';
 import { trackPdfDownload } from '@/lib/analytics';
+import { shareSajuResult } from '@/lib/kakao-share';
 import { useToast } from '@/hooks/use-toast';
 import SEOHead, { generateSajuResultSEO } from '@/components/seo-head';
 import type { FortuneReading } from '@shared/schema';
@@ -43,6 +44,30 @@ export default function Results() {
       toast({
         title: "PDF 생성 실패",
         description: "잠시 후 다시 시도해주세요.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleShare = () => {
+    if (!reading || !('id' in reading) || !reading.id) return;
+
+    try {
+      shareSajuResult(readingId, {
+        birthYear: reading.birthYear,
+        birthMonth: reading.birthMonth,
+        birthDay: reading.birthDay,
+        gender: reading.gender as 'male' | 'female',
+      });
+
+      toast({
+        title: "카카오톡 공유",
+        description: "카카오톡으로 사주 결과를 공유합니다.",
+      });
+    } catch (error) {
+      toast({
+        title: "공유 실패",
+        description: "카카오톡 공유 중 오류가 발생했습니다.",
         variant: "destructive",
       });
     }
@@ -158,8 +183,14 @@ export default function Results() {
             </div>
             <h3 className="text-lg font-semibold mb-4">결과가 도움이 되셨나요?</h3>
             <div className="flex justify-center space-x-4">
-              <Button variant="outline" data-testid="button-share">
-                결과 공유하기
+              <Button
+                variant="outline"
+                onClick={handleShare}
+                className="flex items-center gap-2"
+                data-testid="button-share"
+              >
+                <Share2 className="w-4 h-4" />
+                카카오톡 공유
               </Button>
               <Button variant="outline" data-testid="button-feedback">
                 피드백 남기기

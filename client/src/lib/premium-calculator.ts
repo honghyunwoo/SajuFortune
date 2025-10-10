@@ -20,6 +20,10 @@ import { analyze격국, type 격국결과 } from '@shared/geokguk-analyzer';
 import { calculate대운, type 대운결과 } from '@shared/daeun-calculator';
 import { analyze십이운성, type 십이운성결과 } from '@shared/sibiunseong-analyzer';
 import { normalizeToKST, debugTimezone } from '@shared/timezone-utils';
+import { analyzeLoveFortune, type LoveFortuneResult } from '@shared/love-fortune-analyzer';
+import { analyzeWealthFortune, type WealthFortuneResult } from '@shared/wealth-fortune-analyzer';
+import { analyzeHealthFortune, type HealthFortuneResult } from '@shared/health-fortune-analyzer';
+import { analyzeCareerFortune, type CareerFortuneResult } from '@shared/career-fortune-analyzer';
 
 // 타입 정의
 export interface SajuPillar {
@@ -57,6 +61,10 @@ export interface PremiumSajuAnalysis {
     geokguk: 격국결과;
     daeun: 대운결과;
     sibiunseong: 십이운성결과;
+    loveFortune?: LoveFortuneResult;
+    wealthFortune?: WealthFortuneResult;
+    healthFortune?: HealthFortuneResult;
+    careerFortune?: CareerFortuneResult;
     lunar: LunarDate;
     cyclicalDay: number;
     precision: 'premium' | 'basic';
@@ -69,6 +77,10 @@ export interface CalculationOptions {
     includeGeokguk?: boolean;
     includeDaeun?: boolean;
     includeSibiunseong?: boolean;
+    includeLoveFortune?: boolean;
+    includeWealthFortune?: boolean;
+    includeHealthFortune?: boolean;
+    includeCareerFortune?: boolean;
     currentAge?: number;
     gender?: 'male' | 'female';
     precision?: 'premium' | 'basic';
@@ -86,6 +98,10 @@ export function calculatePremiumSaju(date: Date, hour: number, options: Calculat
         includeGeokguk = true,
         includeDaeun = true,
         includeSibiunseong = true,
+        includeLoveFortune = false,
+        includeWealthFortune = false,
+        includeHealthFortune = false,
+        includeCareerFortune = false,
         currentAge,
         gender = 'male',
         precision = 'premium'
@@ -166,6 +182,23 @@ export function calculatePremiumSaju(date: Date, hour: number, options: Calculat
     // 9. 60갑자 순환일 - KST 기준
     const cyclicalDay = getCyclicalDay(kstDate);
 
+    // 10. 상세 운세 분석 (옵션)
+    const currentYear = kstDate.getFullYear();
+    const currentMonth = kstDate.getMonth() + 1;
+
+    // SajuResult를 analyzer용 SajuPillars 형태로 변환
+    const sajuPillars = {
+        year: { heavenlyStem: saju.year.gan, earthlyBranch: saju.year.ji },
+        month: { heavenlyStem: saju.month.gan, earthlyBranch: saju.month.ji },
+        day: { heavenlyStem: saju.day.gan, earthlyBranch: saju.day.ji },
+        hour: { heavenlyStem: saju.hour.gan, earthlyBranch: saju.hour.ji }
+    };
+
+    const loveFortune = includeLoveFortune ? analyzeLoveFortune(sajuPillars, currentYear, currentMonth) : undefined;
+    const wealthFortune = includeWealthFortune ? analyzeWealthFortune(sajuPillars, currentYear, currentMonth) : undefined;
+    const healthFortune = includeHealthFortune ? analyzeHealthFortune(sajuPillars) : undefined;
+    const careerFortune = includeCareerFortune ? analyzeCareerFortune(sajuPillars, currentYear, currentMonth) : undefined;
+
     const calculationTime = Date.now() - startTime;
 
     if (process.env.NODE_ENV === 'development') {
@@ -187,6 +220,10 @@ export function calculatePremiumSaju(date: Date, hour: number, options: Calculat
         geokguk,
         daeun,
         sibiunseong,
+        loveFortune,
+        wealthFortune,
+        healthFortune,
+        careerFortune,
         lunar,
         cyclicalDay,
         precision,

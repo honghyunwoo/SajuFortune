@@ -63,9 +63,22 @@ export default defineConfig({
             return 'stripe-vendor';
           }
 
+          // i18next 라이브러리 (lazy loaded)
+          if (id.includes('i18next') || id.includes('react-i18next')) {
+            return 'i18n-vendor';
+          }
+
           // 명리학 데이터 (큰 데이터)
           if (id.includes('@shared/astro-data') || id.includes('@shared/solar-terms') || id.includes('@shared/sinsal-data')) {
             return 'astro-data';
+          }
+
+          // Fortune Analyzers (4개 모듈, lazy loaded)
+          if (id.includes('love-fortune-analyzer') ||
+              id.includes('wealth-fortune-analyzer') ||
+              id.includes('health-fortune-analyzer') ||
+              id.includes('career-fortune-analyzer')) {
+            return 'fortune-analyzers';
           }
 
           // 나머지 node_modules는 vendor로

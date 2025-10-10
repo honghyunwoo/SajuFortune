@@ -43,7 +43,8 @@
       "Bash(Month)",
       "Bash(git mv:*)",
       "Bash(mkdir:*)",
-      "Bash(npx:*)"
+      "Bash(npx:*)",
+      "Bash(awk:*)"
     ],
     "deny": [],
     "ask": []

@@ -6,23 +6,25 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { trackPageView } from "@/lib/analytics";
 import Home from "@/pages/home";
-import Checkout from "@/pages/checkout";
-import TermsOfService from "@/pages/terms-of-service";
-import PrivacyPolicy from "@/pages/privacy-policy";
-import CookiePolicy from "@/pages/cookie-policy";
-import Disclaimer from "@/pages/disclaimer";
-import FAQ from "@/pages/faq";
-import Contact from "@/pages/contact";
-import RefundPolicy from "@/pages/refund-policy";
 import NotFound from "@/pages/not-found";
-import BlogIndex from "@/pages/blog/index";
-import BlogPost from "@/pages/blog/post";
-import Compatibility from "@/pages/compatibility";
-import MonthlyFortune from "@/pages/monthly-fortune";
-import Premium from "@/pages/premium";
 
 // 무거운 페이지들은 lazy loading으로 최적화
 const Results = lazy(() => import("@/pages/results"));
+const Checkout = lazy(() => import("@/pages/checkout"));
+const Compatibility = lazy(() => import("@/pages/compatibility"));
+const MonthlyFortune = lazy(() => import("@/pages/monthly-fortune"));
+const Premium = lazy(() => import("@/pages/premium"));
+const BlogIndex = lazy(() => import("@/pages/blog/index"));
+const BlogPost = lazy(() => import("@/pages/blog/post"));
+
+// 법적 문서들은 lazy loading (자주 방문하지 않음)
+const TermsOfService = lazy(() => import("@/pages/terms-of-service"));
+const PrivacyPolicy = lazy(() => import("@/pages/privacy-policy"));
+const CookiePolicy = lazy(() => import("@/pages/cookie-policy"));
+const Disclaimer = lazy(() => import("@/pages/disclaimer"));
+const FAQ = lazy(() => import("@/pages/faq"));
+const Contact = lazy(() => import("@/pages/contact"));
+const RefundPolicy = lazy(() => import("@/pages/refund-policy"));
 
 function Router() {
   const [location] = useLocation();

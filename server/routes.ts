@@ -82,6 +82,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const premiumResult = calculatePremiumSaju(birthDate, validatedData.birthHour, {
         includeSinsal: true,
         includeLunar: true,
+        includeGeokguk: true,
+        includeDaeun: true,
+        includeSibiunseong: true,
+        includeLoveFortune: true,
+        includeWealthFortune: true,
+        includeHealthFortune: true,
+        includeCareerFortune: true,
+        currentAge: validatedData.birthYear ? new Date().getFullYear() - validatedData.birthYear : undefined,
+        gender: validatedData.gender,
         precision: 'premium'
       });
       

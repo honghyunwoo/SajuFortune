@@ -1,10 +1,13 @@
 /**
  * 궁합 분석 API 라우트
+ * 실제 사주 계산 통합
  */
 
 import type { Express } from 'express';
 import { calculateCompatibility } from '../shared/compatibility-calculator';
 import type { HeavenlyStem, EarthlyBranch } from '../shared/compatibility-calculator';
+import { calculatePremiumSaju } from '../client/src/lib/premium-calculator';
+import { log } from './logger';
 
 interface PersonInput {
   name: string;
@@ -14,7 +17,8 @@ interface PersonInput {
   birthDay: number;
   birthHour: number;
   birthMinute: number;
-  isLeapMonth: boolean;
+  calendarType: 'solar' | 'lunar';
+  isLeapMonth?: boolean;
 }
 
 /**
@@ -44,27 +48,92 @@ export function registerCompatibilityRoutes(app: Express) {
         });
       }
 
-      // 각 사람의 사주 계산 (임시로 하드코딩 - 추후 lunar-calculator 통합 필요)
+      // 각 사람의 사주 계산
+      const person1BirthDate = new Date(
+        person1.birthYear,
+        person1.birthMonth - 1,
+        person1.birthDay,
+        person1.birthHour,
+        person1.birthMinute
+      );
+
+      const person2BirthDate = new Date(
+        person2.birthYear,
+        person2.birthMonth - 1,
+        person2.birthDay,
+        person2.birthHour,
+        person2.birthMinute
+      );
+
+      // Premium 사주 계산
+      const person1SajuData = calculatePremiumSaju(person1BirthDate, person1.birthHour, {
+        gender: person1.gender,
+        precision: 'premium',
+      });
+
+      const person2SajuData = calculatePremiumSaju(person2BirthDate, person2.birthHour, {
+        gender: person2.gender,
+        precision: 'premium',
+      });
+
+      // 사주 데이터를 궁합 계산용 형식으로 변환
       const person1Saju = {
-        year: { heavenlyStem: '갑' as HeavenlyStem, earthlyBranch: '자' as EarthlyBranch },
-        month: { heavenlyStem: '병' as HeavenlyStem, earthlyBranch: '인' as EarthlyBranch },
-        day: { heavenlyStem: '무' as HeavenlyStem, earthlyBranch: '진' as EarthlyBranch },
-        hour: { heavenlyStem: '경' as HeavenlyStem, earthlyBranch: '오' as EarthlyBranch },
+        year: {
+          heavenlyStem: person1SajuData.saju.year.gan as HeavenlyStem,
+          earthlyBranch: person1SajuData.saju.year.ji as EarthlyBranch,
+        },
+        month: {
+          heavenlyStem: person1SajuData.saju.month.gan as HeavenlyStem,
+          earthlyBranch: person1SajuData.saju.month.ji as EarthlyBranch,
+        },
+        day: {
+          heavenlyStem: person1SajuData.saju.day.gan as HeavenlyStem,
+          earthlyBranch: person1SajuData.saju.day.ji as EarthlyBranch,
+        },
+        hour: {
+          heavenlyStem: person1SajuData.saju.hour.gan as HeavenlyStem,
+          earthlyBranch: person1SajuData.saju.hour.ji as EarthlyBranch,
+        },
       };
 
       const person2Saju = {
-        year: { heavenlyStem: '을' as HeavenlyStem, earthlyBranch: '축' as EarthlyBranch },
-        month: { heavenlyStem: '정' as HeavenlyStem, earthlyBranch: '묘' as EarthlyBranch },
-        day: { heavenlyStem: '기' as HeavenlyStem, earthlyBranch: '사' as EarthlyBranch },
-        hour: { heavenlyStem: '신' as HeavenlyStem, earthlyBranch: '미' as EarthlyBranch },
+        year: {
+          heavenlyStem: person2SajuData.saju.year.gan as HeavenlyStem,
+          earthlyBranch: person2SajuData.saju.year.ji as EarthlyBranch,
+        },
+        month: {
+          heavenlyStem: person2SajuData.saju.month.gan as HeavenlyStem,
+          earthlyBranch: person2SajuData.saju.month.ji as EarthlyBranch,
+        },
+        day: {
+          heavenlyStem: person2SajuData.saju.day.gan as HeavenlyStem,
+          earthlyBranch: person2SajuData.saju.day.ji as EarthlyBranch,
+        },
+        hour: {
+          heavenlyStem: person2SajuData.saju.hour.gan as HeavenlyStem,
+          earthlyBranch: person2SajuData.saju.hour.ji as EarthlyBranch,
+        },
       };
 
       // 궁합 계산
       const compatibilityResult = calculateCompatibility(person1Saju, person2Saju);
 
-      res.json(compatibilityResult);
-    } catch (error) {
-      console.error('[Compatibility] API error:', error);
+      log.info(`[Compatibility] Calculated for ${person1.name} & ${person2.name}: ${compatibilityResult.overallScore}`);
+
+      // 응답에 사주 정보도 포함
+      res.json({
+        ...compatibilityResult,
+        person1: {
+          name: person1.name,
+          saju: person1Saju,
+        },
+        person2: {
+          name: person2.name,
+          saju: person2Saju,
+        },
+      });
+    } catch (error: any) {
+      log.error('[Compatibility] API error:', error);
       res.status(500).json({
         error: 'CALCULATION_ERROR',
         message: '궁합 계산 중 오류가 발생했습니다.',

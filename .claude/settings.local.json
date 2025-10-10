@@ -44,7 +44,12 @@
       "Bash(git mv:*)",
       "Bash(mkdir:*)",
       "Bash(npx:*)",
-      "Bash(awk:*)"
+      "Bash(awk:*)",
+      "Bash(node:*)",
+      "Bash(timeout:*)",
+      "Bash(netstat:*)",
+      "Bash(findstr:*)",
+      "Bash(taskkill:*)"
     ],
     "deny": [],
     "ask": []

@@ -29,7 +29,9 @@ if (process.env.REDIS_URL) {
   });
 
   redisClient.on('error', (err) => {
-    console.error('Redis connection error:', err);
+    if (process.env.NODE_ENV === 'development') {
+      console.error('Redis connection error:', err);
+    }
   });
 }
 
@@ -46,9 +48,13 @@ export class CacheService {
     if (redisClient) {
       redisClient.ping().then(() => {
         this.isRedisAvailable = true;
-        console.log('✅ Redis cache connected');
+        if (process.env.NODE_ENV !== 'test') {
+          console.log('✅ Redis cache connected');
+        }
       }).catch(() => {
-        console.log('⚠️ Redis not available, using memory cache');
+        if (process.env.NODE_ENV !== 'test') {
+          console.log('⚠️ Redis not available, using memory cache');
+        }
       });
     }
   }
@@ -69,12 +75,14 @@ export class CacheService {
         const value = await redisClient.get(key);
         return value ? JSON.parse(value) : null;
       } else {
-        return memoryCache.get<T>(key) || null;
-      }
-    } catch (error) {
-      console.error('Cache get error:', error);
-      return null;
+      return memoryCache.get<T>(key) || null;
     }
+  } catch (error) {
+    if (process.env.NODE_ENV === 'development') {
+      console.error('Cache get error:', error);
+    }
+    return null;
+  }
   }
 
   /**
@@ -86,12 +94,14 @@ export class CacheService {
         await redisClient.setex(key, ttl, JSON.stringify(value));
         return true;
       } else {
-        return memoryCache.set(key, value, ttl);
-      }
-    } catch (error) {
-      console.error('Cache set error:', error);
-      return false;
+      return memoryCache.set(key, value, ttl);
     }
+  } catch (error) {
+    if (process.env.NODE_ENV === 'development') {
+      console.error('Cache set error:', error);
+    }
+    return false;
+  }
   }
 
   /**
@@ -103,12 +113,14 @@ export class CacheService {
         const result = await redisClient.del(key);
         return result > 0;
       } else {
-        return memoryCache.del(key) > 0;
-      }
-    } catch (error) {
-      console.error('Cache delete error:', error);
-      return false;
+      return memoryCache.del(key) > 0;
     }
+  } catch (error) {
+    if (process.env.NODE_ENV === 'development') {
+      console.error('Cache delete error:', error);
+    }
+    return false;
+  }
   }
 
   /**
@@ -131,7 +143,9 @@ export class CacheService {
         return memoryCache.del(matchedKeys);
       }
     } catch (error) {
-      console.error('Cache deletePattern error:', error);
+      if (process.env.NODE_ENV === 'development') {
+        console.error('Cache deletePattern error:', error);
+      }
       return 0;
     }
   }
@@ -149,13 +163,16 @@ export class CacheService {
         return true;
       }
     } catch (error) {
-      console.error('Cache flush error:', error);
+      if (process.env.NODE_ENV === 'development') {
+        console.error('Cache flush error:', error);
+      }
       return false;
     }
   }
 
   /**
    * 사주 계산 결과 캐시 키 생성
+   * PRD 6.2: 버전 기반 캐시 키로 업그레이드
    */
   generateSajuCacheKey(birthData: {
     year: number;
@@ -165,7 +182,8 @@ export class CacheService {
     minute: number;
     calendarType: string;
   }): string {
-    return `saju:${birthData.year}-${birthData.month}-${birthData.day}-${birthData.hour}-${birthData.minute}-${birthData.calendarType}`;
+    const VERSION = '1.0.0'; // 알고리즘 버전 (변경 시 모든 캐시 무효화)
+    return `saju:v${VERSION}:${birthData.year}:${birthData.month}:${birthData.day}:${birthData.hour}:${birthData.minute}:${birthData.calendarType}`;
   }
 
   /**
@@ -181,25 +199,59 @@ export class CacheService {
    */
   async getCachedSajuResult(birthData: any): Promise<any | null> {
     const key = this.generateSajuCacheKey(birthData);
-    return await this.get(key);
+    const result = await this.get(key);
+    
+    if (result) {
+      this.recordCacheHit();
+    } else {
+      this.recordCacheMiss();
+    }
+    
+    return result;
   }
 
   /**
-   * 캐시 통계 정보
+   * 캐시 통계 정보 (PRD 6.2: Hit Rate 포함)
    */
+  private cacheHits = 0;
+  private cacheMisses = 0;
+
+  recordCacheHit(): void {
+    this.cacheHits++;
+  }
+
+  recordCacheMiss(): void {
+    this.cacheMisses++;
+  }
+
   async getStats(): Promise<{
     type: 'memory' | 'redis';
     keys: number;
+    hits: number;
+    misses: number;
+    hitRate: number;
     memory?: any;
   }> {
+    const totalRequests = this.cacheHits + this.cacheMisses;
+    const hitRate = totalRequests > 0 ? (this.cacheHits / totalRequests) * 100 : 0;
+
     if (this.isRedisAvailable && redisClient) {
       const keys = await redisClient.dbsize();
-      return { type: 'redis', keys };
+      return { 
+        type: 'redis', 
+        keys,
+        hits: this.cacheHits,
+        misses: this.cacheMisses,
+        hitRate: Math.round(hitRate * 100) / 100
+      };
     } else {
       const stats = memoryCache.getStats();
       return { 
         type: 'memory', 
-        keys: stats.keys, 
+        keys: stats.keys,
+        hits: this.cacheHits,
+        misses: this.cacheMisses,
+        hitRate: Math.round(hitRate * 100) / 100,
         memory: stats 
       };
     }
@@ -220,7 +272,9 @@ export const cacheMiddleware = (ttl: number = 3600) => {
         return res.json(cached);
       }
     } catch (error) {
-      console.error('Cache middleware error:', error);
+      if (process.env.NODE_ENV === 'development') {
+        console.error('Cache middleware error:', error);
+      }
     }
 
     // 원본 응답 함수 저장

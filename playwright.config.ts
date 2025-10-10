@@ -18,8 +18,9 @@ export default defineConfig({
     },
   ],
   webServer: {
-    command: 'npm run dev',
+    command: 'tsx server/index.ts',
     url: 'http://localhost:5000',
-    reuseExistingServer: !process.env.CI,
+    reuseExistingServer: true, // 수동으로 서버 시작
+    timeout: 120 * 1000, // 2분
   },
 });

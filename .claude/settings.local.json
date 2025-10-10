@@ -41,7 +41,8 @@
       "Bash(PLAYWRIGHT_TEST=true npx playwright test --reporter=list)",
       "Bash(cmd /c:*)",
       "Bash(Month)",
-      "Bash(git mv:*)"
+      "Bash(git mv:*)",
+      "Bash(mkdir:*)"
     ],
     "deny": [],
     "ask": []

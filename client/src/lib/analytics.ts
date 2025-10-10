@@ -49,7 +49,10 @@ export function initializeAnalytics(): void {
   });
 
   isGALoaded = true;
-  console.log('[Analytics] Google Analytics 초기화 완료');
+  
+  if (import.meta.env.DEV) {
+    console.log('[Analytics] Google Analytics 초기화 완료');
+  }
 }
 
 /**
@@ -64,7 +67,9 @@ export function trackPageView(pagePath: string, pageTitle?: string): void {
     page_title: pageTitle || document.title,
   });
 
-  console.log('[Analytics] 페이지뷰:', pagePath);
+  if (import.meta.env.DEV) {
+    console.log('[Analytics] 페이지뷰:', pagePath);
+  }
 }
 
 /**
@@ -85,7 +90,9 @@ export function trackSajuCalculation(data: {
     calculation_time_ms: data.calculationTime,
   });
 
-  console.log('[Analytics] 사주 분석 완료:', data);
+  if (import.meta.env.DEV) {
+    console.log('[Analytics] 사주 분석 완료:', data);
+  }
 }
 
 /**
@@ -104,7 +111,9 @@ export function trackPdfDownload(data: {
     birth_year: data.birthYear,
   });
 
-  console.log('[Analytics] PDF 다운로드:', data);
+  if (import.meta.env.DEV) {
+    console.log('[Analytics] PDF 다운로드:', data);
+  }
 }
 
 /**
@@ -120,7 +129,9 @@ export function trackDonationClick(amount: number): void {
     currency: 'KRW',
   });
 
-  console.log('[Analytics] 후원 버튼 클릭:', amount);
+  if (import.meta.env.DEV) {
+    console.log('[Analytics] 후원 버튼 클릭:', amount);
+  }
 }
 
 /**
@@ -157,7 +168,9 @@ export function trackDonationComplete(data: {
     payment_method: data.method,
   });
 
-  console.log('[Analytics] 후원 완료:', data);
+  if (import.meta.env.DEV) {
+    console.log('[Analytics] 후원 완료:', data);
+  }
 }
 
 /**
@@ -189,7 +202,9 @@ export function trackEvent(
 
   window.gtag('event', eventName, params);
 
-  console.log('[Analytics] 커스텀 이벤트:', eventName, params);
+  if (import.meta.env.DEV) {
+    console.log('[Analytics] 커스텀 이벤트:', eventName, params);
+  }
 }
 
 // TypeScript 타입 선언

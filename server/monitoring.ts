@@ -193,29 +193,85 @@ export const performanceMonitoring = (req: Request, res: Response, next: NextFun
   next();
 };
 
-// 헬스 체크 엔드포인트
-export const healthCheck = (req: Request, res: Response) => {
+/**
+ * PRD 준수 헬스체크 엔드포인트
+ * PRD 9.6: DB/Redis 연결 상태 포함
+ */
+export const healthCheck = async (req: Request, res: Response) => {
   const metrics = monitoringService.getMetrics();
   const warnings = monitoringService.checkPerformanceWarnings();
   
+  // DB 연결 확인
+  let dbStatus: 'ok' | 'error' = 'ok';
+  let dbLatency = 0;
+  try {
+    const dbStartTime = Date.now();
+    // Import storage dynamically to avoid circular dependency
+    const { storage } = await import('./storage');
+    await storage.getUser('health-check-test'); // Dummy query
+    dbLatency = Date.now() - dbStartTime;
+  } catch (error) {
+    dbStatus = 'error';
+    warnings.push('Database connection failed');
+  }
+
+  // Redis 연결 확인
+  let redisStatus: 'ok' | 'error' | 'disabled' = 'disabled';
+  let redisLatency = 0;
+  try {
+    const redisStartTime = Date.now();
+    const { cacheService } = await import('./cache');
+    // Ping test - use simple get/set
+    const testKey = 'health-check:test';
+    await cacheService.set(testKey, { test: true }, 10);
+    await cacheService.get(testKey);
+    redisLatency = Date.now() - redisStartTime;
+    redisStatus = 'ok';
+  } catch (error) {
+    if (process.env.REDIS_URL) {
+      redisStatus = 'error';
+      warnings.push('Redis connection failed');
+    }
+  }
+
+  const overallStatus = 
+    dbStatus === 'error' ? 'unhealthy' :
+    warnings.length > 2 ? 'degraded' :
+    warnings.length > 0 ? 'warning' :
+    'healthy';
+  
   const health = {
-    status: warnings.length === 0 ? 'healthy' : 'warning',
+    status: overallStatus,
+    version: '1.0.0',
     timestamp: new Date().toISOString(),
+    uptime: Math.round(metrics.uptime),
+    checks: {
+      database: {
+        status: dbStatus,
+        latency: dbLatency
+      },
+      redis: {
+        status: redisStatus,
+        latency: redisLatency
+      }
+    },
     metrics: {
-      uptime: metrics.uptime,
       requestCount: metrics.requestCount,
       averageResponseTime: Math.round(metrics.averageResponseTime),
       errorRate: Math.round(metrics.errorRate * 100) / 100,
       memoryUsage: {
         heapUsed: Math.round(metrics.memoryUsage.heapUsed / 1024 / 1024),
         heapTotal: Math.round(metrics.memoryUsage.heapTotal / 1024 / 1024),
-        external: Math.round(metrics.memoryUsage.external / 1024 / 1024)
+        rss: Math.round(metrics.memoryUsage.rss / 1024 / 1024)
       }
     },
     warnings
   };
 
-  res.json(health);
+  // Kubernetes Liveness Probe: 200 반환
+  // Kubernetes Readiness Probe: DB/Redis 상태 반영
+  const statusCode = overallStatus === 'unhealthy' ? 503 : 200;
+  res.status(statusCode).json(health);
 };
 
 // 메트릭 엔드포인트 (관리자용)

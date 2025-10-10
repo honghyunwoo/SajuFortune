@@ -91,7 +91,9 @@ export function calculatePremiumSaju(date: Date, hour: number, options: Calculat
         precision = 'premium'
     } = options;
 
-    console.log('🔮 프리미엄 사주 계산 시작:', { date, hour, precision });
+    if (process.env.NODE_ENV === 'development') {
+        console.log('🔮 프리미엄 사주 계산 시작:', { date, hour, precision });
+    }
 
     // 타임존 정규화: 입력된 시간을 KST로 변환
     const kstDate = normalizeToKST(date);
@@ -166,14 +168,16 @@ export function calculatePremiumSaju(date: Date, hour: number, options: Calculat
 
     const calculationTime = Date.now() - startTime;
 
-    console.log('✅ 프리미엄 사주 계산 완료:', {
-        calculationTime: `${calculationTime}ms`,
-        신살개수: sinsal.total,
-        격국: geokguk.격국명,
-        대운개수: daeun.대운목록.length,
-        십이운성평균: sibiunseong.전체평가.생애에너지,
-        정밀도: precision
-    });
+    if (process.env.NODE_ENV === 'development') {
+        console.log('✅ 프리미엄 사주 계산 완료:', {
+            calculationTime: `${calculationTime}ms`,
+            신살개수: sinsal.total,
+            격국: geokguk.격국명,
+            대운개수: daeun.대운목록.length,
+            십이운성평균: sibiunseong.전체평가.생애에너지,
+            정밀도: precision
+        });
+    }
 
     return {
         saju,
@@ -238,7 +242,10 @@ function getMonthGapja(year: number, month: number, day: number, yearGan: 천간
     for (let i = 0; i < 절기구간표.length; i++) {
         const termInfo = 절기구간표[i];
         const termDate = get절기(year, termInfo.term);
-        console.log(`  [getMonthGapja] Term: ${termInfo.term}, Term Date: ${termDate.toISOString()}, Current Date: ${currentDate.toISOString()}`);
+        
+        if (process.env.NODE_ENV === 'development') {
+            console.log(`  [getMonthGapja] Term: ${termInfo.term}, Term Date: ${termDate.toISOString()}, Current Date: ${currentDate.toISOString()}`);
+        }
 
         if (currentDate >= termDate) {
             sajuMonth = termInfo.sajuMonth;
@@ -257,7 +264,9 @@ function getMonthGapja(year: number, month: number, day: number, yearGan: 천간
     const sajuMonthIndex = (sajuMonth - 1) % 12;
     const monthGan = 월간매핑표[yearGan] ? 월간매핑표[yearGan][sajuMonthIndex] : null;
 
-    console.log(`  [getMonthGapja] Final sajuMonth: ${sajuMonth}, sajuMonthIndex: ${sajuMonthIndex}, yearGan: ${yearGan}, monthGan: ${monthGan}`);
+    if (process.env.NODE_ENV === 'development') {
+        console.log(`  [getMonthGapja] Final sajuMonth: ${sajuMonth}, sajuMonthIndex: ${sajuMonthIndex}, yearGan: ${yearGan}, monthGan: ${monthGan}`);
+    }
 
     if (!monthGan) {
         console.error(`월간 계산 실패: yearGan=${yearGan}, sajuMonth=${sajuMonth}`);
@@ -294,7 +303,10 @@ function getDayGapja(year: number, month: number, day: number): number {
  */
 function getHourGapja(dayGan: 천간타입, hour: number): SajuPillar {
     const dayGanIndex = 천간.indexOf(dayGan);
-    console.log(`  [getHourGapja] dayGan: ${dayGan}, dayGanIndex: ${dayGanIndex}, hour: ${hour}`);
+    
+    if (process.env.NODE_ENV === 'development') {
+        console.log(`  [getHourGapja] dayGan: ${dayGan}, dayGanIndex: ${dayGanIndex}, hour: ${hour}`);
+    }
 
     // 정확한 시주 지지 계산 (23시-01시=자시, 01시-03시=축시, ...)
     let hourJiIndex: number;
@@ -311,7 +323,10 @@ function getHourGapja(dayGan: 천간타입, hour: number): SajuPillar {
     else if (hour >= 19 && hour <= 20) hourJiIndex = 10; // 술시
     else if (hour >= 21 && hour <= 22) hourJiIndex = 11; // 해시
     else hourJiIndex = 6; // 기본값 오시
-    console.log(`  [getHourGapja] hourJiIndex: ${hourJiIndex}, 지지[hourJiIndex]: ${지지[hourJiIndex]}`);
+    
+    if (process.env.NODE_ENV === 'development') {
+        console.log(`  [getHourGapja] hourJiIndex: ${hourJiIndex}, 지지[hourJiIndex]: ${지지[hourJiIndex]}`);
+    }
 
     // ⭐ 핵심 수정: 정확한 시주 천간 계산 (완성본의 수정된 매핑 테이블)
     const 일간별자시천간: { [key: number]: number } = {
@@ -323,9 +338,12 @@ function getHourGapja(dayGan: 천간타입, hour: number): SajuPillar {
     };
 
     const 자시천간 = 일간별자시천간[dayGanIndex];
-    console.log(`  [getHourGapja] 자시천간: ${자시천간}, 천간[자시천간]: ${천간[자시천간]}`);
     const hourGanIndex = (자시천간 + hourJiIndex) % 10;
-    console.log(`  [getHourGapja] hourGanIndex: ${hourGanIndex}, 천간[hourGanIndex]: ${천간[hourGanIndex]}`);
+    
+    if (process.env.NODE_ENV === 'development') {
+        console.log(`  [getHourGapja] 자시천간: ${자시천간}, 천간[자시천간]: ${천간[자시천간]}`);
+        console.log(`  [getHourGapja] hourGanIndex: ${hourGanIndex}, 천간[hourGanIndex]: ${천간[hourGanIndex]}`);
+    }
 
     return {
         gan: 천간[hourGanIndex],
@@ -477,13 +495,15 @@ export function test1989Case(): {
     const actual = hourGan;
     const isFixed = actual === expected;
     
-    console.log('🧪 1989년 테스트 케이스:', {
-        날짜: '1989-10-06 12:00',
-        예상시간: expected,
-        실제시간: actual,
-        수정여부: isFixed ? '✅ 수정됨' : '❌ 미수정',
-        전체사주: result.saju
-    });
+    if (process.env.NODE_ENV === 'development') {
+        console.log('🧪 1989년 테스트 케이스:', {
+            날짜: '1989-10-06 12:00',
+            예상시간: expected,
+            실제시간: actual,
+            수정여부: isFixed ? '✅ 수정됨' : '❌ 미수정',
+            전체사주: result.saju
+        });
+    }
     
     return {
         expected,

@@ -1,7 +1,8 @@
 import 'dotenv/config';
 import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
-import { setupVite, serveStatic, log } from "./vite";
+import { registerBlogRoutes } from "./blog";
+import { setupVite, serveStatic, log as viteLog } from "./vite";
 import session from "express-session";
 import connectPGSimple from "connect-pg-simple";
 import pg from "pg";
@@ -16,6 +17,9 @@ import {
   sessionSecurity
 } from "./security";
 import { performanceMonitoring, healthCheck, metricsEndpoint } from "./monitoring";
+import { requestLogger, errorLogger } from "./middleware/logger-middleware";
+import { handleApiError, notFoundHandler } from "./middleware/error-handler";
+import { log } from "./logger";
 
 // 환경변수 검증 (프로덕션에서 필수)
 function validateEnvironment() {
@@ -111,6 +115,9 @@ app.use(validateInput);
 // 개인정보 보호 로깅
 app.use(privacySafeLogging);
 
+// HTTP 요청/응답 로깅 (Winston)
+app.use(requestLogger);
+
 // 성능 모니터링
 app.use(performanceMonitoring);
 
@@ -164,7 +171,7 @@ app.use((req, res, next) => {
         logLine = logLine.slice(0, 79) + "…";
       }
 
-      log(logLine);
+      viteLog(logLine);
     }
   });
 
@@ -174,11 +181,23 @@ app.use((req, res, next) => {
 (async () => {
   const server = await registerRoutes(app);
 
+  // 블로그 라우트 등록
+  registerBlogRoutes(app);
+
   // 헬스 체크 엔드포인트
   app.get('/health', healthCheck);
   app.get('/metrics', metricsEndpoint);
 
-  // 보안 강화된 에러 핸들러
+  // 404 Not Found 핸들러
+  app.use(notFoundHandler);
+  
+  // Winston 에러 로깅
+  app.use(errorLogger);
+  
+  // 커스텀 에러 핸들러 (PRD 에러 코드 준수)
+  app.use(handleApiError);
+  
+  // 보안 강화된 에러 핸들러 (Fallback)
   app.use(secureErrorHandler);
 
   // importantly only setup vite in development and after
@@ -198,6 +217,6 @@ app.use((req, res, next) => {
   const host = process.platform === 'win32' ? 'localhost' : '0.0.0.0';
 
   server.listen(port, host, () => {
-    log(`serving on ${host}:${port}`);
+    viteLog(`serving on ${host}:${port}`);
   });
 })();

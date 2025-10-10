@@ -1,0 +1,845 @@
+# PRD 준수 태스크 계획서
+## PRD Compliance Task Plan
+
+**작성일**: 2025-10-08  
+**기준 문서**: docs/PRD_SajuFortune.md v1.0.0  
+**현재 완성도**: 실제 **70%** (PRD 기준)
+
+---
+
+## 📊 PRD vs 현재 상태 Gap 분석
+
+### ✅ PRD 요구사항 vs 실제 구현 현황
+
+| PRD 요구사항 | PRD 우선순위 | 현재 상태 | 완성도 | Gap |
+|-------------|------------|----------|--------|-----|
+| **FR-001: 사주팔자 계산** | P0 (Critical) | ✅ 완료 | 100% | 없음 |
+| **FR-002: 격국 분석** | P0 (Critical) | ✅ 완료 | 100% | 없음 |
+| **FR-003: 대운 계산** | P0 (Critical) | ✅ 완료 | 100% | 없음 |
+| **FR-004: 십이운성 분석** | P0 (Critical) | ✅ 완료 | 100% | 없음 |
+| **FR-005: 일일 운세** | P1 (High) | ✅ 완료 | 100% | 없음 |
+| **FR-006: PDF 다운로드** | P1 (High) | ✅ 완료 | 100% | 없음 |
+| **FR-007: 후원하기** | P1 (High) | ⚠️ **70%** | 70% | **Webhook 미검증** |
+| **API-001: POST /api/fortune-readings** | P0 | ✅ 완료 | 100% | 없음 |
+| **API-002: GET /api/fortune-readings/:id** | P0 | ✅ 완료 | 100% | 없음 |
+| **API-003: POST /api/create-donation** | P1 | ✅ 완료 | 100% | 없음 |
+| **API-004: POST /api/stripe-webhook** | P1 | ✅ **구현됨** | 90% | **테스트 부재** |
+| **API-005: GET /api/donations/:readingId** | P1 | ✅ 완료 | 100% | 없음 |
+| **API-006: POST /api/contact** | P1 | ✅ 완료 | 100% | 없음 |
+| **SEC-001~005: 보안 요구사항** | P0 | ✅ 완료 | 95% | CSRF 검증 미약 |
+| **P-001~004: 성능 요구사항** | P0 | ✅ 완료 | 100% | 없음 |
+| **M-001~003: 유지보수성** | P1 | ⚠️ **60%** | 60% | **로깅/모니터링 미흡** |
+| **ACC-001~002: 접근성** | P1 | ⚠️ **70%** | 70% | ARIA 일부 누락 |
+
+### 🔍 핵심 발견 사항
+
+#### ✅ 예상보다 잘 구현된 것들
+1. **Stripe Webhook**: `server/routes.ts:185` 에 이미 구현됨!
+   ```typescript
+   app.post("/api/stripe-webhook", async (req, res) => {
+     const event = stripe.webhooks.constructEvent(req.body, sig, endpointSecret);
+     if (event.type === 'payment_intent.succeeded') {
+       await storage.updateDonationPayment(paymentIntent.id);
+     }
+   });
+   ```
+
+2. **SEO 파일들**: `robots.txt`, `sitemap.xml` 이미 존재
+3. **보안 미들웨어**: Helmet, CORS, Rate Limiting 모두 구현됨
+4. **캐싱 시스템**: Redis + NodeCache fallback 구현됨
+5. **PDF 다운로드**: 클라이언트에 구현되어 있음
+
+#### ❌ PRD에 명시되었지만 누락된 것들
+1. **사용자 인증**: PRD에서 **요구하지 않음**! (익명 서비스)
+   - PRD 1.2: "100% 무료 제공 + 회원가입 불필요" ✅
+   - **결론**: 인증 시스템은 PRD 요구사항 아님!
+
+2. **프리미엄 구독**: Phase 2 (6-12개월) 기능
+   - 현재는 Phase 1 (MVP) 단계
+   - **결론**: 아직 구현 시기 아님!
+
+3. **DB 마이그레이션**: PRD에 명시 안 됨
+   - 하지만 프로덕션 필수 요소
+   - **결론**: 추가 필요
+
+4. **헬스체크 개선**: PRD 요구사항
+   - PRD 9.6: DB/Redis 연결 확인 필요
+   - 현재: 단순 `{ status: 'ok' }` 반환
+   - **결론**: 개선 필요
+
+5. **구조화된 로깅**: PRD 요구사항
+   - PRD 9.6: 구조화된 로그 (timestamp, IP, userAgent)
+   - 현재: console.log만 사용
+   - **결론**: 개선 필요
+
+---
+
+## 🎯 PRD 기반 정제된 태스크 (Refined Tasks)
+
+### 🔴 Phase 1: MVP 완성 (PRD Week 13 - 최종 배포 준비)
+
+#### Task 1.1: Stripe Webhook 테스트 및 검증 ⚡ 4시간
+**PRD 참조**: FR-007, API-004  
+**현재 상태**: ✅ 구현됨, ❌ 테스트 없음
+
+**상세 작업**:
+1. Stripe CLI로 로컬 Webhook 테스트
+   ```bash
+   stripe listen --forward-to localhost:5000/api/stripe-webhook
+   stripe trigger payment_intent.succeeded
+   ```
+2. Webhook 이벤트 타입 확장
+   - `payment_intent.succeeded` ✅
+   - `payment_intent.payment_failed` 추가 필요
+   - `charge.refunded` 추가 필요
+3. DB 업데이트 검증
+   - `donations` 테이블 `status` 업데이트 확인
+4. 에러 처리 강화
+   - Webhook 서명 검증 실패 시 로깅
+5. E2E 테스트 작성
+   - `__tests__/integration/stripe-webhook.test.ts`
+
+**완료 조건**:
+- [ ] Stripe CLI 테스트 성공
+- [ ] 3가지 이벤트 타입 처리 (succeeded, failed, refunded)
+- [ ] DB 업데이트 검증 테스트 통과
+- [ ] 에러 케이스 테스트 통과
+
+---
+
+#### Task 1.2: 헬스체크 강화 (DB/Redis 연결 확인) ⚡ 3시간
+**PRD 참조**: 9.6 Health Check Endpoint
+
+**현재 코드**:
+```typescript
+// server/monitoring.ts
+app.get('/health', (req, res) => {
+  res.json({ status: 'healthy' });
+});
+```
+
+**PRD 요구사항**:
+```typescript
+// PRD 9.6 예시
+app.get('/health', (req, res) => {
+  res.json({
+    status: 'healthy',
+    version: '1.0.0',
+    uptime: process.uptime(),
+    timestamp: new Date().toISOString()
+  });
+});
+```
+
+**개선 작업**:
+1. DB 연결 확인
+   ```typescript
+   const dbHealthy = await db.select().from(schema.users).limit(1);
+   ```
+2. Redis 연결 확인
+   ```typescript
+   const redisHealthy = await redisClient.ping();
+   ```
+3. 상세 상태 반환
+   ```typescript
+   {
+     status: 'healthy' | 'degraded' | 'unhealthy',
+     version: '1.0.0',
+     uptime: process.uptime(),
+     checks: {
+       database: { status: 'ok', latency: 12 },
+       redis: { status: 'ok', latency: 5 },
+       stripe: { status: 'ok' }
+     },
+     timestamp: new Date().toISOString()
+   }
+   ```
+4. Kubernetes Readiness Probe 연동
+   - `readinessProbe.httpGet.path: /health`
+
+**완료 조건**:
+- [ ] DB/Redis 연결 상태 확인
+- [ ] 상세 헬스 정보 반환
+- [ ] K8s probe 테스트 성공
+
+---
+
+#### Task 1.3: 구조화된 로깅 시스템 구축 ⚡ 12시간
+**PRD 참조**: 9.6 로깅 전략, M-003
+
+**PRD 요구사항**:
+```typescript
+// PRD 9.6 예시
+logger.info({
+  timestamp: new Date().toISOString(),
+  level: 'info',
+  message: '사주 계산 완료',
+  metadata: {
+    readingId: 'abc123',
+    duration: 1234,
+    cached: false
+  }
+});
+```
+
+**현재 문제**:
+```typescript
+console.log('✅ 캐시된 사주 결과 사용'); // 비구조화
+```
+
+**개선 작업**:
+1. Winston 라이브러리 설치
+   ```bash
+   npm install winston
+   npm install -D @types/winston
+   ```
+
+2. Logger 설정 파일 생성
+   ```typescript
+   // server/logger.ts
+   import winston from 'winston';
+   
+   export const logger = winston.createLogger({
+     level: process.env.LOG_LEVEL || 'info',
+     format: winston.format.combine(
+       winston.format.timestamp(),
+       winston.format.errors({ stack: true }),
+       winston.format.json()
+     ),
+     transports: [
+       // 개발: 콘솔 출력
+       new winston.transports.Console({
+         format: winston.format.simple()
+       }),
+       // 프로덕션: 파일 저장
+       new winston.transports.File({
+         filename: 'logs/error.log',
+         level: 'error'
+       }),
+       new winston.transports.File({
+         filename: 'logs/combined.log'
+       })
+     ]
+   });
+   ```
+
+3. 모든 `console.log` 대체
+   - `server/routes.ts`: 15개 → `logger.info()`
+   - `server/cache.ts`: 8개 → `logger.warn()`
+   - `server/email.ts`: 3개 → `logger.info()`
+   - `client/src/lib/premium-calculator.ts`: 조건부 유지 (개발 환경)
+
+4. 요청/응답 로깅 미들웨어
+   ```typescript
+   app.use((req, res, next) => {
+     logger.info({
+       message: 'HTTP Request',
+       method: req.method,
+       path: req.path,
+       ip: req.ip,
+       userAgent: req.get('user-agent')
+     });
+     next();
+   });
+   ```
+
+**완료 조건**:
+- [ ] Winston 설정 완료
+- [ ] 모든 console.log 대체 (서버)
+- [ ] 요청/응답 로깅 미들웨어 추가
+- [ ] 로그 파일 생성 확인
+
+---
+
+#### Task 1.4: E2E 테스트 수정 및 실행 ⚡ 16시간
+**PRD 참조**: 8.4 E2E Tests, Week 13 체크리스트
+
+**PRD 요구사항**:
+- E2E 테스트 실행 및 통과 (32 tests) ✅
+- 프로덕션 배포 전 필수 완료
+
+**현재 문제**:
+```typescript
+Error: Playwright Test did not expect test.describe() to be called here.
+```
+
+**원인 분석**:
+- Vitest가 Playwright 테스트 파일까지 실행 중
+- `vitest.config.ts`에서 `e2e/` 제외했지만 여전히 실행됨
+
+**수정 작업**:
+1. **vitest.config.ts 수정** (완료 ✅)
+   ```typescript
+   exclude: ['**/e2e/**', ...]
+   ```
+
+2. **Playwright 설정 검증**
+   ```bash
+   npx playwright test --list
+   ```
+
+3. **개발 서버 시작**
+   ```bash
+   npm run dev
+   ```
+
+4. **E2E 테스트 실행**
+   ```bash
+   npx playwright test
+   npx playwright test --project=chromium
+   npx playwright test --headed # UI 모드
+   ```
+
+5. **실패한 테스트 수정**
+   - `e2e/smoke.spec.ts`: 2 tests
+   - `e2e/saju-fortune.spec.ts`: 25 tests
+   - `e2e/api-integration.spec.ts`: 5 tests (실제 서버 필요)
+
+6. **Playwright Report 생성**
+   ```bash
+   npx playwright test --reporter=html
+   npx playwright show-report
+   ```
+
+**완료 조건**:
+- [ ] 32개 E2E 테스트 모두 통과
+- [ ] Playwright HTML 리포트 생성
+- [ ] 스크린샷 캡처 (실패 시)
+
+---
+
+#### Task 1.5: 데이터베이스 마이그레이션 설정 ⚡ 6시간
+**PRD 참조**: 6.1 Database Schema (암묵적 요구사항)
+
+**PRD 스키마**:
+```sql
+-- fortune_readings 테이블
+-- donations 테이블
+-- contact_messages 테이블
+```
+
+**현재 문제**:
+```bash
+$ ls drizzle/
+# 폴더 자체가 없음
+
+$ cat package.json | grep drizzle
+"db:push": "drizzle-kit push"  # ← 프로토타입용
+```
+
+**개선 작업**:
+1. **Drizzle Kit 마이그레이션 모드 전환**
+   ```bash
+   npm install -D drizzle-kit
+   ```
+
+2. **초기 마이그레이션 생성**
+   ```bash
+   npx drizzle-kit generate:pg
+   ```
+
+3. **마이그레이션 파일 검증**
+   ```typescript
+   // drizzle/0000_initial_schema.sql
+   CREATE TABLE fortune_readings (...);
+   CREATE TABLE donations (...);
+   CREATE TABLE contact_messages (...);
+   ```
+
+4. **마이그레이션 실행 스크립트**
+   ```json
+   {
+     "scripts": {
+       "db:generate": "drizzle-kit generate:pg",
+       "db:migrate": "drizzle-kit migrate",
+       "db:studio": "drizzle-kit studio"
+     }
+   }
+   ```
+
+5. **Rollback 스크립트**
+   ```typescript
+   // scripts/rollback-migration.ts
+   // 마이그레이션 되돌리기 로직
+   ```
+
+**완료 조건**:
+- [ ] 마이그레이션 파일 생성
+- [ ] 로컬 DB 마이그레이션 테스트 성공
+- [ ] Rollback 스크립트 작성
+
+---
+
+#### Task 1.6: .env.example 및 환경변수 문서화 ⚡ 2시간
+**PRD 참조**: 9.1 배포 환경
+
+**PRD 요구사항**:
+- 개발/스테이징/프로덕션 환경 구분
+- 환경변수 명확한 문서화
+
+**현재 문제**:
+- `.env.example` 파일 없음
+- 신입 개발자가 어떻게 설정해야 할지 모름
+
+**생성 파일**:
+1. **`.env.example`** (루트)
+   ```bash
+   # Server Configuration
+   NODE_ENV=development
+   PORT=5000
+   
+   # Database (NeonDB)
+   DATABASE_URL=postgresql://user:password@host/database?sslmode=require
+   
+   # Redis (Upstash)
+   REDIS_URL=redis://default:password@host:port
+   
+   # Session Secret (32+ characters)
+   SESSION_SECRET=your-super-secret-session-key-minimum-32-chars
+   
+   # Stripe
+   STRIPE_SECRET_KEY=sk_test_...
+   STRIPE_PUBLIC_KEY=pk_test_...
+   STRIPE_WEBHOOK_SECRET=whsec_...
+   
+   # Email (SendGrid or AWS SES)
+   SENDGRID_API_KEY=SG.xxx
+   EMAIL_FROM=noreply@sajufortune.com
+   
+   # Analytics (Optional)
+   GA_MEASUREMENT_ID=G-XXXXXXXXXX
+   ```
+
+2. **`.env.production.example`** (프로덕션 템플릿)
+   ```bash
+   NODE_ENV=production
+   DATABASE_URL=postgresql://...  # NeonDB Production
+   REDIS_URL=redis://...          # Upstash Production
+   STRIPE_SECRET_KEY=sk_live_...  # Live Mode
+   ```
+
+3. **README.md 환경변수 섹션 추가**
+   ```markdown
+   ## 🔧 환경 변수 설정
+   
+   1. `.env.example`을 복사하여 `.env` 생성
+   2. 각 환경변수에 실제 값 입력
+   3. `SESSION_SECRET` 생성:
+      ```bash
+      node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
+      ```
+   ```
+
+**완료 조건**:
+- [ ] `.env.example` 생성
+- [ ] `.env.production.example` 생성
+- [ ] README 환경변수 섹션 추가
+- [ ] 모든 필수 변수 문서화
+
+---
+
+#### Task 1.7: 커스텀 에러 클래스 실제 적용 ⚡ 8시간
+**PRD 참조**: 에러 코드 E1001~E5002
+
+**현재 문제**:
+```typescript
+// shared/errors/ 에 클래스 정의는 잘 되어 있음
+// 하지만 실제 사용하는 곳이 0개!
+
+// server/routes.ts:121
+} catch (error: any) {
+  res.status(400).json({ message: "Error creating fortune reading: " + error.message });
+  // ← 모든 에러가 400으로 반환됨
+}
+```
+
+**PRD 에러 코드**:
+- E1001~E1005: 입력 검증 에러 (400)
+- E2001~E2003: 비즈니스 로직 에러 (422)
+- E3001~E3003: 인증/인가 에러 (401/403)
+- E4001~E4003: 시스템 에러 (500)
+- E5001~E5002: Rate Limiting (429)
+
+**적용 작업**:
+1. **에러 클래스 매핑**
+   ```typescript
+   // server/error-handler.ts (신규)
+   import { BusinessError, SystemError, AuthError } from '@shared/errors';
+   
+   export function handleError(error: Error, res: Response) {
+     if (error instanceof BusinessError) {
+       return res.status(422).json({
+         success: false,
+         error: {
+           code: error.code,
+           message: error.message,
+           userMessage: error.userMessage
+         }
+       });
+     }
+     
+     if (error instanceof SystemError) {
+       logger.error('System Error', { error });
+       return res.status(500).json({
+         success: false,
+         error: {
+           code: 'E4001',
+           message: 'Internal server error',
+           userMessage: '서버 오류가 발생했습니다'
+         }
+       });
+     }
+     
+     // ... 기타 에러 타입
+   }
+   ```
+
+2. **API 엔드포인트에 적용**
+   ```typescript
+   // server/routes.ts
+   app.post("/api/fortune-readings", async (req, res) => {
+     try {
+       const validatedData = createFortuneReadingSchema.parse(req.body);
+       // ...
+     } catch (error) {
+       if (error instanceof z.ZodError) {
+         throw new InvalidInputError('E1001', '생년월일이 올바르지 않습니다', error);
+       }
+       handleError(error as Error, res);
+     }
+   });
+   ```
+
+3. **6개 API 엔드포인트 모두 적용**
+   - `/api/fortune-readings` (POST, GET)
+   - `/api/create-donation` (POST)
+   - `/api/stripe-webhook` (POST)
+   - `/api/donations/:id` (GET)
+   - `/api/contact` (POST)
+
+**완료 조건**:
+- [ ] `error-handler.ts` 생성
+- [ ] 6개 API 엔드포인트 에러 처리 개선
+- [ ] 에러 응답 형식 PRD 준수
+- [ ] 각 에러 코드별 테스트 작성
+
+---
+
+#### Task 1.8: 캐시 무효화 API 및 버전 관리 ⚡ 6시간
+**PRD 참조**: 6.2 Redis 캐싱 전략
+
+**PRD 요구사항**:
+```typescript
+// 무효화 방법
+- 수동: cacheService.del(key)
+- 패턴: cacheService.deletePattern("saju:result:*")
+- 전체: cacheService.flush()
+```
+
+**현재 구현**:
+```typescript
+// server/cache.ts
+export const cacheService = {
+  async getCachedSajuResult(params: CacheKey): Promise<any> { ... },
+  async setCachedSajuResult(params: CacheKey, result: any): Promise<void> { ... }
+  // ← 무효화 메서드 없음!
+};
+```
+
+**추가 작업**:
+1. **캐시 서비스 확장**
+   ```typescript
+   // server/cache.ts
+   export const cacheService = {
+     // 기존 메서드...
+     
+     async invalidate(key: string): Promise<void> {
+       if (redisClient) {
+         await redisClient.del(key);
+       }
+       nodeCache.del(key);
+     },
+     
+     async invalidatePattern(pattern: string): Promise<number> {
+       if (redisClient) {
+         const keys = await redisClient.keys(pattern);
+         if (keys.length > 0) {
+           return await redisClient.del(...keys);
+         }
+       }
+       // NodeCache는 패턴 삭제 미지원
+       return 0;
+     },
+     
+     async flush(): Promise<void> {
+       if (redisClient) {
+         await redisClient.flushall();
+       }
+       nodeCache.flushAll();
+     },
+     
+     async getStats(): Promise<CacheStats> {
+       return {
+         hits: cacheHits,
+         misses: cacheMisses,
+         hitRate: cacheHits / (cacheHits + cacheMisses),
+         keys: nodeCache.keys().length
+       };
+     }
+   };
+   ```
+
+2. **관리자 API 추가** (보안 주의)
+   ```typescript
+   // server/routes.ts
+   app.delete("/api/admin/cache/:key", adminAuth, async (req, res) => {
+     await cacheService.invalidate(req.params.key);
+     res.json({ message: 'Cache invalidated' });
+   });
+   
+   app.delete("/api/admin/cache", adminAuth, async (req, res) => {
+     await cacheService.flush();
+     res.json({ message: 'All cache flushed' });
+   });
+   ```
+
+3. **버전 기반 캐시 키**
+   ```typescript
+   const VERSION = '1.0.0';
+   const cacheKey = `saju:${VERSION}:${year}:${month}:${day}:...`;
+   ```
+
+**완료 조건**:
+- [ ] 캐시 무효화 메서드 3개 추가
+- [ ] 관리자 API 2개 추가 (인증 필요)
+- [ ] 버전 기반 캐시 키 적용
+- [ ] 캐시 통계 API 추가
+
+---
+
+#### Task 1.9: .gitignore 및 보안 파일 점검 ⚡ 1시간
+**PRD 참조**: 보안 모범 사례
+
+**점검 항목**:
+1. `.env` 파일이 git에 커밋되지 않도록 확인
+2. `node_modules/` 제외 확인
+3. `logs/` 폴더 제외 추가
+4. `coverage/` 제외 확인
+5. `.DS_Store` 제외 (macOS)
+
+**작업**:
+```bash
+# .gitignore 확인 및 수정
+cat .gitignore
+
+# 추가할 항목
+logs/
+*.log
+.env
+.env.local
+.env.production
+coverage/
+dist/
+```
+
+**완료 조건**:
+- [ ] `.env` 예시 파일만 커밋됨
+- [ ] 실제 `.env`는 .gitignore에 포함
+- [ ] 민감 정보 노출 없음
+
+---
+
+### 🟠 Phase 2: 프로덕션 배포 준비 (PRD Week 13)
+
+#### Task 2.1: 프로덕션 체크리스트 실행 ⚡ 4시간
+**PRD 참조**: PRODUCTION_CHECKLIST.md
+
+**체크리스트 항목**:
+- [ ] 환경변수 설정 완료
+- [ ] DB 마이그레이션 실행
+- [ ] SSL 인증서 설정 (Let's Encrypt)
+- [ ] 도메인 DNS 설정
+- [ ] Stripe Live Mode 전환
+- [ ] 최종 보안 점검
+
+**작업**:
+1. `PRODUCTION_CHECKLIST.md` 파일 읽기
+2. 각 항목 하나씩 확인 및 체크
+3. 미완료 항목 리스트업
+4. 우선순위 설정
+
+---
+
+#### Task 2.2: 배포 스크립트 검증 ⚡ 3시간
+
+**검증 파일**:
+1. `Dockerfile` - 멀티스테이지 빌드 확인
+2. `docker-compose.yml` - 로컬 테스트
+3. `k8s/deployment.yaml` - Kubernetes 설정
+4. `scripts/deploy.sh` - 배포 스크립트
+
+**작업**:
+```bash
+# 로컬 Docker 빌드 테스트
+docker build -t sajufortune:test .
+docker run -p 5000:5000 sajufortune:test
+
+# docker-compose 테스트
+docker-compose up -d
+docker-compose logs -f
+docker-compose down
+
+# K8s 설정 검증
+kubectl apply --dry-run=client -f k8s/
+```
+
+**완료 조건**:
+- [ ] Docker 이미지 빌드 성공
+- [ ] docker-compose로 로컬 실행 성공
+- [ ] K8s YAML 문법 검증 통과
+
+---
+
+### 🟢 Phase 3: 개선 및 최적화 (선택)
+
+#### Task 3.1: SEO 메타태그 강화 ⚡ 4시간
+**PRD 참조**: 7.2 페이지 구조, 12.2 기술 지표 (SEO 90/100)
+
+**현재 상태**:
+```typescript
+// client/src/components/seo-head.tsx 이미 존재!
+```
+
+**개선 작업**:
+1. Open Graph 메타태그 추가
+2. Twitter Card 메타태그 추가
+3. Canonical URL 설정
+4. Structured Data (JSON-LD)
+
+---
+
+#### Task 3.2: 모니터링 시스템 구축 ⚡ 16시간
+**PRD 참조**: 9.6 모니터링 및 로깅
+
+**구현 계획**:
+1. **Sentry 연동** (에러 추적)
+   ```bash
+   npm install @sentry/node @sentry/react
+   ```
+
+2. **Prometheus + Grafana** (메트릭)
+   ```typescript
+   // server/metrics.ts
+   import promClient from 'prom-client';
+   ```
+
+3. **Uptime Robot** (가동 시간 모니터링)
+   - 무료 플랜: 50개 모니터
+
+---
+
+## 📋 최종 우선순위 태스크 리스트
+
+### 🔴 CRITICAL (즉시 완료, 총 29시간)
+
+| ID | Task | 시간 | 상태 | PRD 참조 |
+|----|------|------|------|---------|
+| 1.1 | Stripe Webhook 테스트 | 4h | pending | FR-007 |
+| 1.2 | 헬스체크 강화 | 3h | pending | 9.6 |
+| 1.3 | 구조화된 로깅 | 12h | pending | 9.6, M-003 |
+| 1.4 | E2E 테스트 수정 | 16h | pending | 8.4, Week 13 |
+| 1.5 | DB 마이그레이션 | 6h | pending | 6.1 |
+| 1.6 | .env.example | 2h | pending | 9.1 |
+| 1.7 | 커스텀 에러 적용 | 8h | pending | 에러 코드 |
+| 1.8 | 캐시 무효화 | 6h | pending | 6.2 |
+| 1.9 | .gitignore 점검 | 1h | pending | 보안 |
+
+**총 시간**: **58시간** (약 7.25일, 풀타임)
+
+### 🟠 HIGH (배포 전 권장, 총 7시간)
+
+| ID | Task | 시간 | 상태 | PRD 참조 |
+|----|------|------|------|---------|
+| 2.1 | 프로덕션 체크리스트 | 4h | pending | Week 13 |
+| 2.2 | 배포 스크립트 검증 | 3h | pending | 9.2, 9.3 |
+
+### 🟢 NICE-TO-HAVE (선택, 총 20시간)
+
+| ID | Task | 시간 | 상태 | PRD 참조 |
+|----|------|------|------|---------|
+| 3.1 | SEO 메타태그 강화 | 4h | pending | 12.2 |
+| 3.2 | 모니터링 시스템 | 16h | pending | 9.6 |
+
+---
+
+## 🎯 실행 순서 (Recommended Order)
+
+### Week 1: 핵심 인프라 (29시간)
+```
+Day 1-2: Task 1.6 (2h) + Task 1.9 (1h) + Task 1.5 (6h) = 9h
+         → 환경 설정 및 DB 준비
+         
+Day 3-4: Task 1.3 (12h) + Task 1.2 (3h) = 15h
+         → 로깅 및 모니터링 기초
+         
+Day 5: Task 1.7 (8h) + Task 1.8 (6h) = 14h
+       → 에러 처리 및 캐시 개선
+```
+
+### Week 2: 테스트 및 검증 (20시간)
+```
+Day 6-7: Task 1.4 (16h) = 16h
+         → E2E 테스트 수정 및 실행
+         
+Day 8: Task 1.1 (4h) = 4h
+       → Stripe Webhook 검증
+       
+Day 9: Task 2.1 (4h) + Task 2.2 (3h) = 7h
+       → 배포 준비 최종 점검
+```
+
+### Week 3: 배포 (선택)
+```
+Day 10-11: Task 3.1 (4h) + Task 3.2 (16h) = 20h
+           → SEO 및 모니터링 (선택)
+```
+
+---
+
+## 📊 PRD 준수도 향상 예측
+
+| 항목 | 현재 | Task 완료 후 | 개선 |
+|-----|------|------------|------|
+| 전체 완성도 | 70% | **95%** | +25% |
+| 보안 (SEC) | 95% | **98%** | +3% |
+| 성능 (P) | 100% | 100% | - |
+| 유지보수성 (M) | 60% | **90%** | +30% |
+| 접근성 (ACC) | 70% | **85%** | +15% |
+| **배포 가능 여부** | ❌ 불가 | ✅ **가능** | 🚀 |
+
+---
+
+## 🎓 결론
+
+### PRD 분석 결과
+1. **예상보다 완성도가 높음**: 70% → 실제로는 Webhook도 구현됨
+2. **사용자 인증은 PRD 요구사항 아님**: "회원가입 불필요" 명시
+3. **프리미엄 기능은 Phase 2**: 지금 구현할 필요 없음
+4. **핵심 누락**: 로깅, 헬스체크, 에러 처리, 테스트
+
+### 최소 배포 가능 조건
+- Task 1.1 ~ 1.9 완료 (58시간, **약 2주**)
+- E2E 테스트 32개 모두 통과
+- 프로덕션 체크리스트 완료
+
+### 현실적 일정
+- **최소 배포**: 2주 후 (Phase 1 완료)
+- **안정적 배포**: 3주 후 (Phase 1 + Phase 2 완료)
+- **완벽한 배포**: 4주 후 (All Phases 완료)
+
+---
+
+**작성자**: AI Lead Developer  
+**PRD 버전**: v1.0.0 (2025-10-03)  
+**다음 단계**: Task 1.6부터 시작 (환경변수 설정)
+

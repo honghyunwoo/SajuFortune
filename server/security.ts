@@ -25,8 +25,10 @@ export const createRateLimit = (windowMs: number, max: number, message: string) 
       return req.path === '/health' || req.path === '/metrics';
     },
     handler: (req: Request, res: Response) => {
-      // Rate Limiting 위반 로깅
-      console.warn(`[RATE_LIMIT] IP: ${req.ip}, Path: ${req.path}, Time: ${new Date().toISOString()}`);
+      // Rate Limiting 위반 로깅 (프로덕션에서만)
+      if (process.env.NODE_ENV === 'production') {
+        console.warn(`[RATE_LIMIT] IP: ${req.ip}, Path: ${req.path}, Time: ${new Date().toISOString()}`);
+      }
 
       res.status(429).json({
         error: message,

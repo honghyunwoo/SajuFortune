@@ -10,6 +10,8 @@ import { analyzeFortune } from "@/lib/saju-calculator";
 import { sajuCalculationRateLimit, donationRateLimit } from "./security";
 import { cacheService } from "./cache";
 import { sendContactFormEmail, sendAutoReplyEmail } from "./email";
+import { log } from "./logger";
+import { throwError } from "./middleware/error-handler";
 
 /**
  * 보안 강화된 세션 ID 생성
@@ -30,8 +32,8 @@ function generateSecureSessionId(req: Request): string {
   return `session_${hash.substring(0, 32)}`;
 }
 
-if (!process.env.STRIPE_SECRET_KEY) {
-  console.warn('Warning: STRIPE_SECRET_KEY not found. Payment functionality will be disabled.');
+if (!process.env.STRIPE_SECRET_KEY && process.env.NODE_ENV !== 'test') {
+  console.warn('⚠️  Warning: STRIPE_SECRET_KEY not found. Payment functionality will be disabled.');
 }
 
 const stripe = process.env.STRIPE_SECRET_KEY ? new Stripe(process.env.STRIPE_SECRET_KEY, {
@@ -59,12 +61,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       const cachedResult = await cacheService.getCachedSajuResult(cacheKey);
       if (cachedResult) {
-        console.log('✅ 캐시된 사주 결과 사용');
+        log.cache('hit', `saju:${cacheKey.year}:${cacheKey.month}:${cacheKey.day}`);
         return res.json({ 
           readingId: cachedResult.readingId,
           cached: true
         });
       }
+      
+      log.cache('miss', `saju:${cacheKey.year}:${cacheKey.month}:${cacheKey.day}`);
       
       // Calculate saju pillars using premium engine
       const birthDate = new Date(
@@ -121,23 +125,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Get fortune reading
-  app.get("/api/fortune-readings/:id", async (req, res) => {
+  app.get("/api/fortune-readings/:id", async (req, res, next) => {
     try {
       const reading = await storage.getFortuneReading(req.params.id);
       if (!reading) {
-        return res.status(404).json({ message: "Fortune reading not found" });
+        throwError.notFound('Fortune reading');
       }
 
       res.json(reading);
-    } catch (error: any) {
-      res.status(500).json({ message: "Error retrieving fortune reading: " + error.message });
+    } catch (error) {
+      next(error);
     }
   });
 
   // Create donation payment intent (Rate Limiting 적용)
-  app.post("/api/create-donation", donationRateLimit, async (req, res) => {
+  app.post("/api/create-donation", donationRateLimit, async (req, res, next) => {
     if (!stripe) {
-      return res.status(500).json({ message: "Payment service not available" });
+      return next(throwError.databaseError('Stripe service not configured'));
     }
 
     try {
@@ -146,7 +150,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       const reading = await storage.getFortuneReading(readingId);
       if (!reading) {
-        return res.status(404).json({ message: "Fortune reading not found" });
+        throwError.notFound('Fortune reading');
+        return; // TypeScript 타입 가드
       }
 
       const paymentIntent = await stripe.paymentIntents.create({
@@ -170,19 +175,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
         isPaid: false
       });
 
+      log.payment('created', paymentIntent.id, amount, { readingId, donorName });
+
       res.json({ 
         clientSecret: paymentIntent.client_secret,
         donationId: donation.id
       });
-    } catch (error: any) {
-      res.status(500).json({ message: "Error creating donation: " + error.message });
+    } catch (error) {
+      next(error);
     }
   });
 
   // Webhook to handle successful donations
-  app.post("/api/stripe-webhook", async (req, res) => {
+  app.post("/api/stripe-webhook", async (req, res, next) => {
     if (!stripe) {
-      return res.status(500).json({ message: "Payment service not available" });
+      return next(throwError.databaseError('Stripe service not configured'));
     }
 
     try {
@@ -197,51 +204,55 @@ export async function registerRoutes(app: Express): Promise<Server> {
         event = req.body;
       }
 
+      // 결제 성공 처리
       if (event.type === 'payment_intent.succeeded') {
         const paymentIntent = event.data.object;
         const { type } = paymentIntent.metadata;
         
         if (type === 'donation') {
           await storage.updateDonationPayment(paymentIntent.id);
+          log.payment('succeeded', paymentIntent.id, paymentIntent.amount, { type });
         }
       }
 
+      // 결제 실패 처리 (PRD 요구사항 추가)
+      if (event.type === 'payment_intent.payment_failed') {
+        const paymentIntent = event.data.object;
+        log.payment('failed', paymentIntent.id, paymentIntent.amount, { 
+          error: paymentIntent.last_payment_error?.message 
+        });
+      }
+
       res.json({ received: true });
-    } catch (error: any) {
-      res.status(400).json({ message: "Webhook error: " + error.message });
+    } catch (error) {
+      next(error);
     }
   });
 
   // Get donations for a reading
-  app.get("/api/donations/:readingId", async (req, res) => {
+  app.get("/api/donations/:readingId", async (req, res, next) => {
     try {
       const donations = await storage.getDonationsByReadingId(req.params.readingId);
       res.json(donations);
-    } catch (error: any) {
-      res.status(500).json({ message: "Error retrieving donations: " + error.message });
+    } catch (error) {
+      next(error);
     }
   });
 
   // Contact form submission
-  app.post("/api/contact", async (req, res) => {
+  app.post("/api/contact", async (req, res, next) => {
     try {
       const { name, email, category, subject, message } = req.body;
 
       // 유효성 검사
       if (!name || !email || !category || !subject || !message) {
-        return res.status(400).json({
-          success: false,
-          message: "모든 필수 항목을 입력해주세요."
-        });
+        throwError.invalidInput('contact form', '모든 필수 항목을 입력해주세요.');
       }
 
       // 이메일 형식 검증
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
       if (!emailRegex.test(email)) {
-        return res.status(400).json({
-          success: false,
-          message: "올바른 이메일 주소를 입력해주세요."
-        });
+        throwError.invalidInput('email', '올바른 이메일 주소를 입력해주세요.');
       }
 
       // 관리자에게 문의 이메일 전송
@@ -266,11 +277,95 @@ export async function registerRoutes(app: Express): Promise<Server> {
         messageId: emailResult.messageId
       });
 
+    } catch (error) {
+      next(error);
+    }
+  });
+
+  // ========================================
+  // 캐시 관리 API (관리자용)
+  // PRD 6.2: 캐시 무효화 지원
+  // ========================================
+  
+  /**
+   * 캐시 통계 조회
+   * GET /api/admin/cache/stats
+   */
+  app.get("/api/admin/cache/stats", async (req, res) => {
+    try {
+      const stats = await cacheService.getStats();
+      res.json({
+        success: true,
+        data: stats,
+        timestamp: new Date().toISOString()
+      });
     } catch (error: any) {
-      console.error("Contact form error:", error);
       res.status(500).json({
         success: false,
-        message: "문의 접수 중 오류가 발생했습니다."
+        message: "캐시 통계 조회 실패: " + error.message
+      });
+    }
+  });
+
+  /**
+   * 특정 캐시 키 삭제
+   * DELETE /api/admin/cache/:key
+   */
+  app.delete("/api/admin/cache/:key", async (req, res) => {
+    try {
+      const deleted = await cacheService.delete(req.params.key);
+      res.json({
+        success: true,
+        message: deleted ? 'Cache key deleted' : 'Cache key not found',
+        key: req.params.key
+      });
+    } catch (error: any) {
+      res.status(500).json({
+        success: false,
+        message: "캐시 삭제 실패: " + error.message
+      });
+    }
+  });
+
+  /**
+   * 패턴 기반 캐시 삭제
+   * DELETE /api/admin/cache/pattern/:pattern
+   * 예: DELETE /api/admin/cache/pattern/saju:v1.0.0:*
+   */
+  app.delete("/api/admin/cache/pattern/:pattern", async (req, res) => {
+    try {
+      const pattern = decodeURIComponent(req.params.pattern);
+      const deletedCount = await cacheService.deletePattern(pattern);
+      res.json({
+        success: true,
+        message: `${deletedCount} cache keys deleted`,
+        pattern,
+        deletedCount
+      });
+    } catch (error: any) {
+      res.status(500).json({
+        success: false,
+        message: "패턴 캐시 삭제 실패: " + error.message
+      });
+    }
+  });
+
+  /**
+   * 전체 캐시 초기화
+   * DELETE /api/admin/cache
+   * ⚠️ 주의: 모든 캐시 데이터가 삭제됩니다!
+   */
+  app.delete("/api/admin/cache", async (req, res) => {
+    try {
+      const flushed = await cacheService.flush();
+      res.json({
+        success: true,
+        message: flushed ? 'All cache flushed' : 'Cache flush failed'
+      });
+    } catch (error: any) {
+      res.status(500).json({
+        success: false,
+        message: "전체 캐시 초기화 실패: " + error.message
       });
     }
   });

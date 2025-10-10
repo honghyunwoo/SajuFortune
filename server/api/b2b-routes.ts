@@ -5,7 +5,7 @@
 
 import type { Express, Request, Response, NextFunction } from 'express';
 import { apiKeyService } from '../api-keys';
-import { calculatePremiumSaju } from '@/lib/premium-calculator';
+import { calculatePremiumSaju } from '@shared/premium-calculator';
 import { calculateCompatibility } from '@shared/compatibility-calculator';
 import { calculateMonthlyFortune } from '@shared/monthly-fortune-calculator';
 import { log } from '../logger';

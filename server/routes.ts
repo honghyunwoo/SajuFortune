@@ -4,9 +4,9 @@ import Stripe from "stripe";
 import crypto from "crypto";
 import { storage } from "./storage";
 import { createFortuneReadingSchema, createDonationSchema } from "@shared/schema";
-import { calculatePremiumSaju } from "@/lib/premium-calculator";
+import { calculatePremiumSaju } from "@shared/premium-calculator";
 import { premiumToSajuData } from "@shared/adapters";
-import { analyzeFortune } from "@/lib/saju-calculator";
+import { buildAnalysisResult } from "@shared/engine/analysis";
 import { sajuCalculationRateLimit, donationRateLimit } from "./security";
 import { cacheService } from "./cache";
 import { sendContactFormEmail, sendAutoReplyEmail } from "./email";
@@ -98,7 +98,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const sajuData = premiumToSajuData(premiumResult);
 
       // Generate fortune analysis (all features are now free)
-      const analysisResult = analyzeFortune(sajuData, validatedData.gender);
+      const analysisResult = buildAnalysisResult(sajuData, validatedData.gender);
 
       const reading = await storage.createFortuneReading({
         userId: null,

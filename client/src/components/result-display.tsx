@@ -4,7 +4,7 @@
  */
 
 import type { FortuneReading } from '@shared/schema';
-import type { PremiumSajuAnalysis } from '@/lib/premium-calculator';
+import type { PremiumSajuAnalysis } from '@shared/premium-calculator';
 import { LegalWarningBanner } from './legal-warning-banner';
 import { SajuPillarsCard } from './organisms/SajuPillarsCard';
 import { PersonalityCard } from './organisms/PersonalityCard';

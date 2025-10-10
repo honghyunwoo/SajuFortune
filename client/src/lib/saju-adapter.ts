@@ -1,4 +1,4 @@
-import type { PremiumSajuAnalysis, SajuResult, ElementAnalysis, TenGodsAnalysis, SinsalAnalysisResult, LunarDate } from './premium-calculator';
+import type { PremiumSajuAnalysis, SajuResult, ElementAnalysis, TenGodsAnalysis, SinsalAnalysisResult, LunarDate } from '@shared/premium-calculator';
 import type { SajuData, SajuPillar } from '@shared/schema';
 import { 천간오행 } from '@shared/astro-data';
 

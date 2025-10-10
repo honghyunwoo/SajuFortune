@@ -6,7 +6,7 @@
 import type { Express } from 'express';
 import { calculateMonthlyFortune } from '../shared/monthly-fortune-calculator';
 import type { HeavenlyStem, EarthlyBranch } from '../shared/compatibility-calculator';
-import { calculatePremiumSaju } from '../client/src/lib/premium-calculator';
+import { calculatePremiumSaju } from '@shared/premium-calculator';
 import { log } from './logger';
 
 interface BirthInput {

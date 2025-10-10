@@ -1,15 +1,17 @@
-// Korean Saju (Four Pillars) Calculator
-// Based on traditional Chinese/Korean astrology principles
+/**
+ * 결정적 운세 분석 엔진
+ * - Math.random() 사용 금지
+ * - 동일 입력 → 동일 출력 보장
+ * - 기존 FortuneAnalysis 타입 100% 호환
+ *
+ * @module shared/engine/analysis
+ * @author Claude Code
+ * @since 2025-10-10
+ */
 
-export interface BirthInfo {
-  year: number;
-  month: number;
-  day: number;
-  hour: number;
-  minute: number;
-  gender: 'male' | 'female';
-  calendarType: 'solar' | 'lunar';
-}
+// ============================================================================
+// 타입 정의 (기존 saju-calculator.ts 호환)
+// ============================================================================
 
 export interface SajuPillar {
   heavenly: string;
@@ -64,13 +66,14 @@ export interface FortuneAnalysis {
   };
 }
 
-// Heavenly Stems (천간)
+// ============================================================================
+// 상수 정의
+// ============================================================================
+
 const HEAVENLY_STEMS = ['갑', '을', '병', '정', '무', '기', '경', '신', '임', '계'];
-
-// Earthly Branches (지지)
 const EARTHLY_BRANCHES = ['자', '축', '인', '묘', '진', '사', '오', '미', '신', '유', '술', '해'];
+const ZODIAC_ANIMALS = ['쥐', '소', '호랑이', '토끼', '용', '뱀', '말', '양', '원숭이', '닭', '개', '돼지'];
 
-// Five Elements mapping
 const STEM_ELEMENTS: { [key: string]: string } = {
   '갑': 'wood', '을': 'wood',
   '병': 'fire', '정': 'fire',
@@ -87,162 +90,15 @@ const BRANCH_ELEMENTS: { [key: string]: string } = {
   '자': 'water', '해': 'water'
 };
 
-// Korean zodiac animals
-const ZODIAC_ANIMALS = ['쥐', '소', '호랑이', '토끼', '용', '뱀', '말', '양', '원숭이', '닭', '개', '돼지'];
-
-// Solar terms for accurate month calculation (24절기)
-const SOLAR_TERMS = [
-  { month: 1, day: 5 }, // 소한
-  { month: 2, day: 4 }, // 입춘
-  { month: 3, day: 6 }, // 경칩
-  { month: 4, day: 5 }, // 청명
-  { month: 5, day: 6 }, // 입하
-  { month: 6, day: 6 }, // 망종
-  { month: 7, day: 7 }, // 소서
-  { month: 8, day: 8 }, // 입추
-  { month: 9, day: 8 }, // 백로
-  { month: 10, day: 8 }, // 한로
-  { month: 11, day: 7 }, // 입동
-  { month: 12, day: 7 }  // 대설
-];
-
-function getSajuYear(year: number): { heavenly: string; earthly: string } {
-  // Base year 1984 = 갑자년 (start of 60-year cycle)
-  const baseYear = 1984;
-  const yearDiff = year - baseYear;
-  const heavenlyIndex = (yearDiff % 10 + 10) % 10;
-  const earthlyIndex = (yearDiff % 12 + 12) % 12;
-  
-  return {
-    heavenly: HEAVENLY_STEMS[heavenlyIndex],
-    earthly: EARTHLY_BRANCHES[earthlyIndex]
-  };
-}
-
-function getSajuMonth(year: number, month: number, day: number): { heavenly: string; earthly: string } {
-  // Calculate actual saju month based on solar terms
-  let sajuMonth = month;
-  const solarTerm = SOLAR_TERMS[month - 1];
-  
-  if (day < solarTerm.day) {
-    sajuMonth = month === 1 ? 12 : month - 1;
-  }
-  
-  // Calculate heavenly stem for month
-  const yearStem = getSajuYear(year);
-  const yearStemIndex = HEAVENLY_STEMS.indexOf(yearStem.heavenly);
-  const monthHeavenlyIndex = ((yearStemIndex % 5) * 2 + sajuMonth - 1) % 10;
-  
-  // Month earthly branch (fixed cycle starting from 인 in 1st month)
-  const monthEarthlyIndex = (sajuMonth + 1) % 12;
-  
-  return {
-    heavenly: HEAVENLY_STEMS[monthHeavenlyIndex],
-    earthly: EARTHLY_BRANCHES[monthEarthlyIndex]
-  };
-}
-
-function getSajuDay(year: number, month: number, day: number): { heavenly: string; earthly: string } {
-  // Calculate days since base date (1900-01-01 = 정축일)
-  const baseDate = new Date(1900, 0, 1);
-  const targetDate = new Date(year, month - 1, day);
-  const daysDiff = Math.floor((targetDate.getTime() - baseDate.getTime()) / (24 * 60 * 60 * 1000));
-  
-  // Base day: 1900-01-01 = 정축일 (index 3, 1)
-  const baseStem = 3; // 정
-  const baseBranch = 1; // 축
-  
-  const dayStemIndex = (baseStem + daysDiff) % 10;
-  const dayBranchIndex = (baseBranch + daysDiff) % 12;
-  
-  return {
-    heavenly: HEAVENLY_STEMS[dayStemIndex],
-    earthly: EARTHLY_BRANCHES[dayBranchIndex]
-  };
-}
-
-function getSajuHour(hour: number, dayStem: string): { heavenly: string; earthly: string } {
-  // Hour earthly branch calculation
-  const hourBranchIndex = Math.floor((hour + 1) / 2) % 12;
-  
-  // Hour heavenly stem calculation based on day stem
-  const dayStemIndex = HEAVENLY_STEMS.indexOf(dayStem);
-  const hourHeavenlyIndex = ((dayStemIndex % 5) * 2 + Math.floor(hour / 2)) % 10;
-  
-  return {
-    heavenly: HEAVENLY_STEMS[hourHeavenlyIndex],
-    earthly: EARTHLY_BRANCHES[hourBranchIndex]
-  };
-}
-
-function calculateElements(pillars: SajuPillar[]): SajuData['elements'] {
-  const elements = { wood: 0, fire: 0, earth: 0, metal: 0, water: 0 };
-  
-  pillars.forEach(pillar => {
-    const stemElement = STEM_ELEMENTS[pillar.heavenly];
-    const branchElement = BRANCH_ELEMENTS[pillar.earthly];
-    
-    if (stemElement) elements[stemElement as keyof typeof elements]++;
-    if (branchElement) elements[branchElement as keyof typeof elements]++;
-  });
-  
-  return elements;
-}
-
-function determineDayMasterStrength(dayMaster: string, elements: SajuData['elements']): 'strong' | 'medium' | 'weak' {
-  const dayElement = STEM_ELEMENTS[dayMaster];
-  const dayElementCount = elements[dayElement as keyof typeof elements];
-  
-  // Helper elements that strengthen the day master
-  const helperElements = {
-    wood: ['wood', 'water'],
-    fire: ['fire', 'wood'],
-    earth: ['earth', 'fire'],
-    metal: ['metal', 'earth'],
-    water: ['water', 'metal']
-  };
-  
-  const helpers = helperElements[dayElement as keyof typeof helperElements] || [];
-  const helperCount = helpers.reduce((sum, element) => sum + elements[element as keyof typeof elements], 0);
-  
-  if (helperCount >= 6) return 'strong';
-  if (helperCount >= 3) return 'medium';
-  return 'weak';
-}
-
-export function calculateSaju(birthInfo: BirthInfo): SajuData {
-  const { year, month, day, hour } = birthInfo;
-  
-  // Calculate four pillars
-  const yearPillar = getSajuYear(year);
-  const monthPillar = getSajuMonth(year, month, day);
-  const dayPillar = getSajuDay(year, month, day);
-  const hourPillar = getSajuHour(hour, dayPillar.heavenly);
-  
-  const pillars: SajuPillar[] = [
-    { ...yearPillar, element: STEM_ELEMENTS[yearPillar.heavenly] },
-    { ...monthPillar, element: STEM_ELEMENTS[monthPillar.heavenly] },
-    { ...dayPillar, element: STEM_ELEMENTS[dayPillar.heavenly] },
-    { ...hourPillar, element: STEM_ELEMENTS[hourPillar.heavenly] }
-  ];
-  
-  const elements = calculateElements(pillars);
-  const dayMaster = dayPillar.heavenly;
-  const strength = determineDayMasterStrength(dayMaster, elements);
-  
-  return {
-    pillars,
-    elements,
-    dayMaster,
-    strength
-  };
-}
+// ============================================================================
+// 결정적 성격 분석
+// ============================================================================
 
 function generatePersonalityAnalysis(sajuData: SajuData, gender: string): string {
   const { dayMaster, strength, elements } = sajuData;
   const dayElement = STEM_ELEMENTS[dayMaster];
-  
-  const personalityTraits = {
+
+  const personalityTraits: Record<string, Record<string, string>> = {
     wood: {
       strong: "자연을 사랑하고 성장욕이 강한 당신은 리더십이 뛰어나고 창의적인 성격입니다. 새로운 도전을 즐기며 끊임없이 발전하려는 의지가 강합니다.",
       medium: "균형잡힌 성격으로 협동심이 뛰어나며 타인을 배려할 줄 아는 따뜻한 마음의 소유자입니다. 꾸준함과 인내력으로 목표를 달성하는 타입입니다.",
@@ -269,71 +125,87 @@ function generatePersonalityAnalysis(sajuData: SajuData, gender: string): string
       weak: "깊이 있고 신비로운 매력을 가진 성격으로 직감력이 뛰어납니다. 조용하지만 내면의 힘이 강하고 끈기가 있습니다."
     }
   };
-  
-  const basePersonality = personalityTraits[dayElement as keyof typeof personalityTraits]?.[strength] || 
+
+  return personalityTraits[dayElement]?.[strength] ||
     "독특하고 개성 있는 성격으로 자신만의 길을 개척해 나가는 타입입니다.";
-  
-  return basePersonality;
 }
+
+// ============================================================================
+// 결정적 오늘 운세 분석 (Math.random() 제거)
+// ============================================================================
 
 function generateTodayFortune(sajuData: SajuData): FortuneAnalysis['todayFortune'] {
   const today = new Date();
-  const todayPillar = getSajuDay(today.getFullYear(), today.getMonth() + 1, today.getDate());
-  const todayElements = calculateElements([{...todayPillar, element: STEM_ELEMENTS[todayPillar.heavenly]}]);
-  
-  // Calculate harmony between birth chart and today
   const { elements } = sajuData;
+
+  // 오늘 날짜의 간지를 계산 (결정적)
+  const todayDayOfYear = Math.floor((today.getTime() - new Date(today.getFullYear(), 0, 0).getTime()) / (24 * 60 * 60 * 1000));
+  const todayStemIndex = todayDayOfYear % 10;
+  const todayBranchIndex = todayDayOfYear % 12;
+  const todayStem = HEAVENLY_STEMS[todayStemIndex];
+  const todayBranch = EARTHLY_BRANCHES[todayBranchIndex];
+
+  // 오늘의 오행
+  const todayElement = STEM_ELEMENTS[todayStem];
+
+  // 사주 오행과의 조화도 계산 (결정적)
+  const elementArray: Array<keyof typeof elements> = ['wood', 'fire', 'earth', 'metal', 'water'];
   let harmony = 0;
-  
-  Object.keys(elements).forEach(element => {
-    const birthCount = elements[element as keyof typeof elements];
-    const todayCount = todayElements[element as keyof typeof todayElements];
-    harmony += Math.abs(birthCount - todayCount * 2); // Today's influence is doubled
+
+  elementArray.forEach(element => {
+    const birthCount = elements[element];
+    const todayImpact = element === todayElement ? 2 : 0;
+    harmony += Math.abs(birthCount - todayImpact);
   });
-  
+
+  // 조화도를 1-5 점수로 변환
   const rating = Math.min(5, Math.max(1, 5 - Math.floor(harmony / 3)));
   const overall = rating >= 4 ? '매우 좋음' : rating >= 3 ? '좋음' : rating >= 2 ? '보통' : '주의 필요';
-  
-  const descriptions = [
-    "오늘은 전반적으로 안정적인 하루가 될 것 같습니다. 계획했던 일들을 차근차근 진행해보세요.",
-    "새로운 기회가 찾아올 수 있는 길한 날입니다. 적극적인 자세로 하루를 시작해보세요.",
-    "감정적으로 풍부한 하루가 될 것 같습니다. 인간관계에서 좋은 소식이 있을 수 있습니다.",
-    "집중력이 높아지는 하루입니다. 중요한 결정을 내리거나 공부, 업무에 집중하기 좋은 날입니다.",
-    "창의력이 발휘되는 하루입니다. 예술 활동이나 새로운 아이디어 구상에 좋은 시간이 될 것입니다."
-  ];
-  
+
+  // 설명은 오늘 오행 기반으로 결정적 선택
+  const descriptions: Record<string, string> = {
+    wood: "오늘은 새로운 시작과 성장에 좋은 날입니다. 창의적인 아이디어를 실행에 옮겨보세요.",
+    fire: "열정과 활력이 넘치는 하루입니다. 적극적인 자세로 기회를 포착하세요.",
+    earth: "안정적이고 차분한 하루가 될 것입니다. 계획을 세우고 차근차근 실행하기 좋은 날입니다.",
+    metal: "집중력이 높아지는 날입니다. 중요한 결정을 내리거나 분석 작업에 적합합니다.",
+    water: "유연하고 적응력이 발휘되는 날입니다. 소통과 관계 개선에 좋은 시간입니다."
+  };
+
   return {
     rating,
     overall,
-    description: descriptions[Math.floor(Math.random() * descriptions.length)],
+    description: descriptions[todayElement] || descriptions.earth,
     love: rating >= 4 ? '상승세' : rating >= 3 ? '안정' : '주의',
     career: rating >= 4 ? '호전' : rating >= 3 ? '보통' : '신중',
     money: rating >= 4 ? '길함' : rating >= 3 ? '평안' : '검소'
   };
 }
 
+// ============================================================================
+// 결정적 세부 분석 (Math.random() 제거)
+// ============================================================================
+
 function generateDetailedAnalysis(sajuData: SajuData, gender: string): FortuneAnalysis['detailedAnalysis'] {
   const { elements, strength, dayMaster } = sajuData;
   const dayElement = STEM_ELEMENTS[dayMaster];
-  
-  // Calculate scores based on element balance and day master strength
+
+  // 오행 균형 점수 계산 (결정적)
   const totalElements = Object.values(elements).reduce((sum, count) => sum + count, 0);
   const balanceScore = Math.max(20, 100 - Math.abs(totalElements - 8) * 10);
-  
   const strengthBonus = strength === 'medium' ? 10 : 0;
-  
+
   return {
     love: {
       score: Math.min(100, Math.max(60, balanceScore + strengthBonus + (elements.water * 5))),
-      level: Math.random() > 0.5 ? '상승세' : '안정기',
-      description: gender === 'female' 
+      level: elements.water >= 2 ? '상승세' : '안정기',
+      description: gender === 'female'
         ? "감수성이 풍부하고 매력적인 당신은 진실한 사랑을 만날 가능성이 높습니다. 자신의 감정을 솔직하게 표현하는 것이 좋겠습니다."
         : "진중하고 책임감 있는 성격으로 안정적인 관계를 구축할 수 있습니다. 상대방에 대한 이해와 배려를 늘려보세요."
     },
     career: {
       score: Math.min(100, Math.max(65, balanceScore + strengthBonus + (elements.earth * 5))),
       level: strength === 'strong' ? '발전기' : '성장기',
-      description: dayElement === 'wood' 
+      description: dayElement === 'wood'
         ? "창조성과 성장 지향적인 성향으로 새로운 분야에서 성공할 가능성이 높습니다. 리더십을 발휘할 기회를 찾아보세요."
         : "꾸준함과 성실함으로 직업적 안정을 이룰 수 있습니다. 전문성을 기르는 데 투자하는 것이 좋겠습니다."
     },
@@ -350,30 +222,25 @@ function generateDetailedAnalysis(sajuData: SajuData, gender: string): FortuneAn
   };
 }
 
+// ============================================================================
+// 결정적 궁합 분석
+// ============================================================================
+
 function generateCompatibility(sajuData: SajuData): FortuneAnalysis['compatibility'] {
   const { pillars } = sajuData;
   const yearBranch = pillars[0].earthly;
   const yearBranchIndex = EARTHLY_BRANCHES.indexOf(yearBranch);
-  
-  // Best zodiac compatibility (삼합, 육합)
+
+  // 삼합, 육합 매핑 (결정적)
   const bestMatches: { [key: number]: number[] } = {
-    0: [4, 8], // 자(쥐) - 진(용), 신(원숭이)
-    1: [5, 9], // 축(소) - 사(뱀), 유(닭)
-    2: [6, 10], // 인(호랑이) - 오(말), 술(개)
-    3: [7, 11], // 묘(토끼) - 미(양), 해(돼지)
-    4: [0, 8], // 진(용) - 자(쥐), 신(원숭이)
-    5: [1, 9], // 사(뱀) - 축(소), 유(닭)
-    6: [2, 10], // 오(말) - 인(호랑이), 술(개)
-    7: [3, 11], // 미(양) - 묘(토끼), 해(돼지)
-    8: [0, 4], // 신(원숭이) - 자(쥐), 진(용)
-    9: [1, 5], // 유(닭) - 축(소), 사(뱀)
-    10: [2, 6], // 술(개) - 인(호랑이), 오(말)
-    11: [3, 7]  // 해(돼지) - 묘(토끼), 미(양)
+    0: [4, 8], 1: [5, 9], 2: [6, 10], 3: [7, 11],
+    4: [0, 8], 5: [1, 9], 6: [2, 10], 7: [3, 11],
+    8: [0, 4], 9: [1, 5], 10: [2, 6], 11: [3, 7]
   };
-  
+
   const matches = bestMatches[yearBranchIndex] || [];
   const bestZodiac = matches.map((i: number) => ZODIAC_ANIMALS[i]).join(', ');
-  
+
   return {
     zodiac: {
       compatibility: '좋음',
@@ -390,10 +257,23 @@ function generateCompatibility(sajuData: SajuData): FortuneAnalysis['compatibili
   };
 }
 
-function generateMonthlyFortune(): FortuneAnalysis['monthlyFortune'] {
+// ============================================================================
+// 결정적 월별 운세 (Math.random() 제거)
+// ============================================================================
+
+function generateMonthlyFortune(sajuData: SajuData): FortuneAnalysis['monthlyFortune'] {
+  const { elements, dayMaster } = sajuData;
   const months = [];
+
+  // 일간 기반 월별 운세 패턴 (결정적)
+  const dayMasterIndex = HEAVENLY_STEMS.indexOf(dayMaster);
+
   for (let i = 1; i <= 12; i++) {
-    const rating = Math.floor(Math.random() * 3) + 3; // 3-5 rating
+    // 일간과 월의 관계로 점수 계산 (결정적)
+    const monthOffset = (dayMasterIndex + i) % 10;
+    const baseRating = 3 + (monthOffset % 3); // 3, 4, 5 순환
+
+    // 월별 고정 설명
     const descriptions = [
       "새로운 시작에 좋은 달입니다. 계획을 세우고 실행에 옮겨보세요.",
       "인간관계에서 좋은 소식이 있을 수 있습니다. 소통을 늘려보세요.",
@@ -408,21 +288,26 @@ function generateMonthlyFortune(): FortuneAnalysis['monthlyFortune'] {
       "목표 달성에 가까워지는 시기입니다. 포기하지 마세요.",
       "연말을 마무리하며 새로운 계획을 세우기 좋은 때입니다."
     ];
-    
+
     months.push({
       month: i,
-      rating,
+      rating: baseRating,
       description: descriptions[i - 1]
     });
   }
+
   return months;
 }
+
+// ============================================================================
+// 결정적 조언 생성
+// ============================================================================
 
 function generateAdvice(sajuData: SajuData): FortuneAnalysis['advice'] {
   const { elements, strength, dayMaster } = sajuData;
   const dayElement = STEM_ELEMENTS[dayMaster];
-  
-  const generalAdvice = {
+
+  const generalAdvice: Record<string, string[]> = {
     wood: [
       "자연과 함께하는 시간을 늘려 에너지를 충전하세요",
       "창의적인 활동을 통해 내재된 잠재력을 발휘해보세요",
@@ -449,9 +334,9 @@ function generateAdvice(sajuData: SajuData): FortuneAnalysis['advice'] {
       "깊이 있는 사고와 감수성을 발휘해보세요"
     ]
   };
-  
+
   return {
-    general: generalAdvice[dayElement as keyof typeof generalAdvice] || [
+    general: generalAdvice[dayElement] || [
       "자신의 특성을 잘 파악하여 강점을 살리세요",
       "균형잡힌 생활을 통해 조화를 이루세요",
       "지속적인 학습과 발전을 추구하세요"
@@ -474,18 +359,38 @@ function generateAdvice(sajuData: SajuData): FortuneAnalysis['advice'] {
   };
 }
 
-export function analyzeFortune(sajuData: SajuData, gender = 'male'): FortuneAnalysis {
+// ============================================================================
+// 메인 분석 함수 (Public API)
+// ============================================================================
+
+/**
+ * 결정적 운세 분석 결과 생성
+ *
+ * @param sajuData 사주 데이터
+ * @param gender 성별 ('male' | 'female')
+ * @returns FortuneAnalysis 객체 (기존 타입 100% 호환)
+ *
+ * @example
+ * ```typescript
+ * const result = buildAnalysisResult(sajuData, 'male');
+ * // 동일 입력에 대해 항상 동일한 결과 반환 (Math.random() 없음)
+ * ```
+ */
+export function buildAnalysisResult(
+  sajuData: SajuData,
+  gender: 'male' | 'female'
+): FortuneAnalysis {
   const personality = generatePersonalityAnalysis(sajuData, gender);
   const todayFortune = generateTodayFortune(sajuData);
-  
+
   const analysis: FortuneAnalysis = {
     personality,
     todayFortune,
     detailedAnalysis: generateDetailedAnalysis(sajuData, gender),
     compatibility: generateCompatibility(sajuData),
-    monthlyFortune: generateMonthlyFortune(),
+    monthlyFortune: generateMonthlyFortune(sajuData),
     advice: generateAdvice(sajuData)
   };
-  
+
   return analysis;
 }

@@ -4,6 +4,7 @@ import App from "./App.tsx";
 import "./index.css";
 import { initializeAnalytics } from "./lib/analytics";
 import { initKakaoSDK } from "./lib/kakao-share";
+import "./i18n"; // i18n 초기화
 
 // Google Analytics 초기화
 initializeAnalytics();

@@ -1,0 +1,322 @@
+{
+  "common": {
+    "appName": "SajuFortune",
+    "loading": "Loading...",
+    "error": "An error occurred",
+    "retry": "Retry",
+    "cancel": "Cancel",
+    "confirm": "Confirm",
+    "save": "Save",
+    "delete": "Delete",
+    "edit": "Edit",
+    "close": "Close",
+    "back": "Back",
+    "next": "Next",
+    "submit": "Submit",
+    "search": "Search",
+    "filter": "Filter",
+    "sort": "Sort",
+    "download": "Download",
+    "share": "Share",
+    "copy": "Copy",
+    "copied": "Copied",
+    "viewMore": "View More",
+    "viewLess": "Collapse"
+  },
+
+  "nav": {
+    "home": "Home",
+    "about": "About",
+    "features": "Features",
+    "pricing": "Pricing",
+    "blog": "Blog",
+    "api": "API",
+    "docs": "Docs",
+    "contact": "Contact",
+    "login": "Login",
+    "signup": "Sign Up",
+    "logout": "Logout",
+    "myAccount": "My Account",
+    "settings": "Settings"
+  },
+
+  "home": {
+    "hero": {
+      "title": "Discover Your Destiny",
+      "subtitle": "Traditional Saju Fortune Telling Guides Your Life Path",
+      "cta": "Start Free",
+      "features": "View Features"
+    },
+    "features": {
+      "title": "Key Features",
+      "subtitle": "AI Meets Traditional Myeongrihak",
+      "accurate": {
+        "title": "Accurate Saju Analysis",
+        "description": "Precise calculation based on 24 solar terms"
+      },
+      "detailed": {
+        "title": "Detailed Fortune",
+        "description": "Love, wealth, health, career fortune"
+      },
+      "pdf": {
+        "title": "PDF Download",
+        "description": "Customizable analysis results"
+      },
+      "compatibility": {
+        "title": "Compatibility Analysis",
+        "description": "Relationship analysis based on stems and branches"
+      }
+    }
+  },
+
+  "saju": {
+    "title": "Saju Analysis",
+    "subtitle": "Enter your birth date and time",
+    "form": {
+      "birthDate": "Birth Date",
+      "birthTime": "Birth Time",
+      "gender": "Gender",
+      "male": "Male",
+      "female": "Female",
+      "calendar": "Calendar",
+      "solar": "Solar",
+      "lunar": "Lunar",
+      "name": "Name (Optional)",
+      "namePlaceholder": "Hong Gil-dong",
+      "calculate": "Analyze Saju",
+      "calculating": "Analyzing...",
+      "selectDate": "Select Date",
+      "selectTime": "Select Time",
+      "hour": "Hour",
+      "minute": "Minute"
+    },
+    "pillars": {
+      "title": "Four Pillars",
+      "year": "Year Pillar",
+      "month": "Month Pillar",
+      "day": "Day Pillar",
+      "hour": "Hour Pillar",
+      "heavenlyStem": "Heavenly Stem",
+      "earthlyBranch": "Earthly Branch"
+    },
+    "analysis": {
+      "overallScore": "Overall Score",
+      "geokguk": "Geokguk (Pattern)",
+      "daeun": "Daeun (Decade Luck)",
+      "sibiunseong": "Sibiunseong (12 Life Stages)",
+      "personality": "Personality Analysis",
+      "strengths": "Strengths",
+      "weaknesses": "Weaknesses",
+      "opportunities": "Opportunities",
+      "threats": "Threats",
+      "advice": "Advice"
+    }
+  },
+
+  "fortune": {
+    "love": {
+      "title": "Love Fortune",
+      "score": "Love Fortune Score",
+      "style": "Love Style",
+      "spousePalace": "Spouse Palace",
+      "currentFortune": "Current Love Fortune",
+      "optimalPeriods": "Optimal Meeting Periods",
+      "advice": "Love Advice"
+    },
+    "wealth": {
+      "title": "Wealth Fortune",
+      "score": "Wealth Fortune Score",
+      "wealthStar": "Wealth Star",
+      "acquisitionMethod": "Wealth Acquisition Method",
+      "investmentStyle": "Investment Style",
+      "currentFortune": "Current Wealth Fortune",
+      "peakPeriods": "Peak Wealth Periods"
+    },
+    "health": {
+      "title": "Health Fortune",
+      "score": "Health Fortune Score",
+      "elementBalance": "Five Elements Balance",
+      "vulnerableOrgans": "Vulnerable Organs",
+      "seasonalCare": "Seasonal Health Care",
+      "riskPeriods": "Health Risk Periods",
+      "lifestyle": "Lifestyle Advice"
+    },
+    "career": {
+      "title": "Career Fortune",
+      "score": "Career Fortune Score",
+      "suitableCareers": "Suitable Careers",
+      "officialStar": "Official Star",
+      "promotionTiming": "Promotion Timing",
+      "jobChangeTiming": "Job Change Timing",
+      "businessFortune": "Business Fortune"
+    }
+  },
+
+  "compatibility": {
+    "title": "Compatibility Analysis",
+    "subtitle": "Compare two people's Saju",
+    "person1": "First Person",
+    "person2": "Second Person",
+    "score": "Compatibility Score",
+    "analysis": "Compatibility Analysis",
+    "strengths": "Strengths",
+    "weaknesses": "Weaknesses",
+    "advice": "Advice",
+    "calculate": "Analyze Compatibility",
+    "excellent": "Excellent",
+    "good": "Good",
+    "average": "Average",
+    "poor": "Poor",
+    "veryPoor": "Very Poor"
+  },
+
+  "monthly": {
+    "title": "Monthly Fortune",
+    "subtitle": "Check your 12-month fortune",
+    "overallScore": "Overall Score",
+    "loveScore": "Love Fortune",
+    "wealthScore": "Wealth Fortune",
+    "healthScore": "Health Fortune",
+    "careerScore": "Career Fortune",
+    "currentMonth": "This Month",
+    "bestMonth": "Best Month",
+    "worstMonth": "Caution Month",
+    "trend": "Trend",
+    "rising": "Rising",
+    "stable": "Stable",
+    "declining": "Declining"
+  },
+
+  "premium": {
+    "title": "Premium Subscription",
+    "subtitle": "Unlock more features",
+    "free": "Free",
+    "monthly": "Monthly Plan",
+    "yearly": "Annual Plan",
+    "currentPlan": "Current Plan",
+    "upgradeTo": "Upgrade",
+    "features": {
+      "basicAnalysis": "Basic Saju Analysis",
+      "unlimitedAnalysis": "Unlimited Saju Analysis",
+      "compatibility": "Compatibility Analysis",
+      "monthlyFortune": "Monthly Fortune",
+      "detailedFortune": "Detailed Fortune (Love/Wealth/Health/Career)",
+      "pdfDownload": "PDF Download",
+      "pdfCustomization": "PDF Customization",
+      "noAds": "No Ads",
+      "prioritySupport": "Priority Support"
+    },
+    "subscribe": "Subscribe",
+    "manage": "Manage Subscription",
+    "cancel": "Cancel Subscription",
+    "saving": "Save",
+    "perMonth": "/month",
+    "perYear": "/year",
+    "limitReached": "Free Limit Reached",
+    "upgradeRequired": "Premium Upgrade Required"
+  },
+
+  "pdf": {
+    "title": "PDF Download",
+    "generating": "Generating PDF...",
+    "generated": "PDF Generated",
+    "download": "Download PDF",
+    "template": {
+      "title": "Select Template",
+      "classic": "Classic",
+      "modern": "Modern",
+      "minimal": "Minimal"
+    },
+    "colorTheme": {
+      "title": "Color Theme",
+      "default": "Default",
+      "blue": "Blue",
+      "purple": "Purple",
+      "green": "Green",
+      "red": "Red",
+      "gold": "Gold"
+    },
+    "cover": {
+      "title": "Cover Settings",
+      "mainTitle": "Main Title",
+      "subtitle": "Subtitle",
+      "includeName": "Include Name",
+      "includeBirthDate": "Include Birth Date",
+      "includeDate": "Include Generated Date",
+      "customMessage": "Custom Message",
+      "logo": "Logo Image"
+    }
+  },
+
+  "share": {
+    "title": "Share",
+    "kakao": "KakaoTalk",
+    "facebook": "Facebook",
+    "twitter": "Twitter",
+    "copyLink": "Copy Link",
+    "linkCopied": "Link copied",
+    "shareSuccess": "Shared successfully",
+    "shareError": "Error sharing"
+  },
+
+  "api": {
+    "title": "Developer API",
+    "subtitle": "Use Saju Analysis API",
+    "documentation": "API Documentation",
+    "pricing": "API Pricing",
+    "getStarted": "Get Started",
+    "apiKey": "API Key",
+    "usage": "Usage",
+    "limit": "Limit",
+    "remaining": "Remaining Requests",
+    "tier": {
+      "free": "Free",
+      "basic": "Basic",
+      "pro": "Pro",
+      "enterprise": "Enterprise"
+    }
+  },
+
+  "footer": {
+    "company": "Company",
+    "aboutUs": "About Us",
+    "team": "Team",
+    "careers": "Careers",
+    "blog": "Blog",
+    "product": "Product",
+    "features": "Features",
+    "pricing": "Pricing",
+    "api": "API",
+    "docs": "Docs",
+    "resources": "Resources",
+    "helpCenter": "Help Center",
+    "terms": "Terms of Service",
+    "privacy": "Privacy Policy",
+    "contact": "Contact",
+    "legal": "Legal Notice",
+    "copyright": "© 2025 SajuFortune. All rights reserved.",
+    "madeWith": "Made with ❤️ in Seoul"
+  },
+
+  "errors": {
+    "network": "Network error occurred",
+    "server": "Server error occurred",
+    "notFound": "Page not found",
+    "unauthorized": "Login required",
+    "forbidden": "Access denied",
+    "validation": "Please check your input",
+    "unknown": "Unknown error occurred",
+    "tryAgain": "Please try again",
+    "goHome": "Go to Home"
+  },
+
+  "validation": {
+    "required": "This field is required",
+    "invalidEmail": "Invalid email address",
+    "invalidDate": "Invalid date",
+    "invalidTime": "Invalid time",
+    "minLength": "Please enter at least {{min}} characters",
+    "maxLength": "Maximum {{max}} characters allowed",
+    "mustMatch": "Must match {{field}}"
+  }
+}

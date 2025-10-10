@@ -1,15 +1,18 @@
 import { useState } from "react";
 import { Link } from "wouter";
 import { Star, Users, Tag, Gift, Crown, Play, Shield, Lock } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import FortuneForm from "@/components/fortune-form";
 import ServiceComparison from "@/components/service-comparison";
+import LanguageSwitcher from "@/components/language-switcher";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import SEOHead, { generateHomeSEO } from "@/components/seo-head";
 
 export default function Home() {
   const [showForm, setShowForm] = useState(false);
+  const { t } = useTranslation();
 
   return (
     <div className="bg-background text-foreground antialiased">
@@ -20,25 +23,26 @@ export default function Home() {
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center space-x-2">
               <div className="yin-yang scale-50"></div>
-              <span className="text-xl font-bold text-primary">운명의 해답</span>
+              <span className="text-xl font-bold text-primary">{t('common.appName')}</span>
             </div>
             <div className="flex items-center space-x-4">
               <Link href="/compatibility">
                 <Button variant="ghost" size="sm">
-                  궁합 보기
+                  {t('nav.compatibility')}
                 </Button>
               </Link>
               <Link href="/blog">
                 <Button variant="ghost" size="sm">
-                  블로그
+                  {t('nav.blog')}
                 </Button>
               </Link>
               <Button variant="ghost" size="sm" data-testid="button-login">
-                로그인
+                {t('common.login')}
               </Button>
               <Button size="sm" data-testid="button-premium">
-                프리미엄 체험
+                {t('common.premium')}
               </Button>
+              <LanguageSwitcher />
             </div>
           </div>
         </div>
@@ -57,28 +61,26 @@ export default function Home() {
           </div>
           
           <h1 className="text-4xl md:text-6xl font-bold text-foreground mb-6">
-            당신의 <span className="text-primary">운명</span>을<br />
-            <span className="text-secondary">정확히</span> 알아보세요
+            {t('hero.title')}
           </h1>
-          
+
           <p className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
-            천년의 지혜가 담긴 전통 사주풀이로 인생의 방향을 찾아보세요.<br />
-            AI와 전통이 만나 더욱 정확한 해석을 제공합니다.
+            {t('hero.subtitle')}
           </p>
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-12">
-            <Button 
-              size="lg" 
+            <Button
+              size="lg"
               className="flex items-center gap-2"
               onClick={() => setShowForm(true)}
               data-testid="button-start-free"
             >
               <Star className="w-5 h-5" />
-              무료로 시작하기
+              {t('hero.startFree')}
             </Button>
             <Button variant="outline" size="lg" className="flex items-center gap-2" data-testid="button-watch-intro">
               <Play className="w-5 h-5" />
-              서비스 소개 보기
+              Watch Intro
             </Button>
           </div>
 
@@ -86,15 +88,15 @@ export default function Home() {
           <div className="flex flex-col sm:flex-row justify-center items-center space-y-2 sm:space-y-0 sm:space-x-8 text-muted-foreground">
             <div className="flex items-center" data-testid="text-user-count">
               <Users className="w-4 h-4 mr-2" />
-              <span>누적 사용자 <strong className="text-foreground">50,000+</strong></span>
+              <span>{t('hero.users')} <strong className="text-foreground">50,000+</strong></span>
             </div>
             <div className="flex items-center" data-testid="text-rating">
               <Star className="w-4 h-4 mr-2 text-yellow-500" />
-              <span>평점 <strong className="text-foreground">4.8/5.0</strong></span>
+              <span>{t('hero.rating')} <strong className="text-foreground">4.8/5.0</strong></span>
             </div>
             <div className="flex items-center" data-testid="text-accuracy">
               <Tag className="w-4 h-4 mr-2" />
-              <span><strong className="text-foreground">정확도 95%</strong></span>
+              <span><strong className="text-foreground">{t('hero.accuracy')}</strong></span>
             </div>
           </div>
         </div>

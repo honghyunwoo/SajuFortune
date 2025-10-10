@@ -139,9 +139,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const reading = await storage.getFortuneReading(req.params.id);
       if (!reading) {
         throwError.notFound('Fortune reading');
+        return; // TypeScript 타입 가드
       }
 
-      res.json(reading);
+      // 캐시에서 premiumResult 가져오기
+      const cacheKey = {
+        year: reading.birthYear,
+        month: reading.birthMonth,
+        day: reading.birthDay,
+        hour: reading.birthHour,
+        minute: reading.birthMinute,
+        calendarType: reading.calendarType
+      };
+
+      const cachedResult = await cacheService.getCachedSajuResult(cacheKey);
+      const premiumResult = cachedResult?.premiumResult;
+
+      res.json({
+        ...reading,
+        premiumResult // 캐시된 premiumResult 추가
+      });
     } catch (error) {
       next(error);
     }

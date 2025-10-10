@@ -4,6 +4,7 @@
  */
 
 import type { FortuneReading } from '@shared/schema';
+import type { PremiumSajuAnalysis } from '@/lib/premium-calculator';
 import { LegalWarningBanner } from './legal-warning-banner';
 import { SajuPillarsCard } from './organisms/SajuPillarsCard';
 import { PersonalityCard } from './organisms/PersonalityCard';
@@ -12,15 +13,16 @@ import { DetailedAnalysisCard } from './organisms/DetailedAnalysisCard';
 import { GeokgukCard } from './organisms/GeokgukCard';
 import { DaeunCard } from './organisms/DaeunCard';
 import { SibiunseongCard } from './organisms/SibiunseongCard';
+import { FortuneDetailedCard } from './organisms/FortuneDetailedCard';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 
 interface ResultDisplayProps {
-  reading: FortuneReading;
+  reading: FortuneReading & { premiumResult?: PremiumSajuAnalysis };
 }
 
 export default function ResultDisplay({ reading }: ResultDisplayProps) {
-  const { sajuData, analysisResult } = reading;
+  const { sajuData, analysisResult, premiumResult } = reading;
 
   return (
     <div className="space-y-8">
@@ -175,6 +177,17 @@ export default function ResultDisplay({ reading }: ResultDisplayProps) {
           </div>
         </CardContent>
       </Card>
+
+      {/* 상세 운세 분석 (4개 탭) - premiumResult가 있을 경우만 표시 */}
+      {premiumResult?.loveFortune && premiumResult?.wealthFortune &&
+       premiumResult?.healthFortune && premiumResult?.careerFortune && (
+        <FortuneDetailedCard
+          loveFortune={premiumResult.loveFortune}
+          wealthFortune={premiumResult.wealthFortune}
+          healthFortune={premiumResult.healthFortune}
+          careerFortune={premiumResult.careerFortune}
+        />
+      )}
     </div>
   );
 }

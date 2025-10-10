@@ -23,6 +23,11 @@ export default function Home() {
               <span className="text-xl font-bold text-primary">운명의 해답</span>
             </div>
             <div className="flex items-center space-x-4">
+              <Link href="/compatibility">
+                <Button variant="ghost" size="sm">
+                  궁합 보기
+                </Button>
+              </Link>
               <Link href="/blog">
                 <Button variant="ghost" size="sm">
                   블로그

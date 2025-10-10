@@ -2,6 +2,7 @@ import 'dotenv/config';
 import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { registerBlogRoutes } from "./blog";
+import { registerCompatibilityRoutes } from "./compatibility";
 import { setupVite, serveStatic, log as viteLog } from "./vite";
 import session from "express-session";
 import connectPGSimple from "connect-pg-simple";
@@ -183,6 +184,9 @@ app.use((req, res, next) => {
 
   // 블로그 라우트 등록
   registerBlogRoutes(app);
+
+  // 궁합 분석 라우트 등록
+  registerCompatibilityRoutes(app);
 
   // 헬스 체크 엔드포인트
   app.get('/health', healthCheck);

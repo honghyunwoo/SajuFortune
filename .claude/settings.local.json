@@ -42,7 +42,8 @@
       "Bash(cmd /c:*)",
       "Bash(Month)",
       "Bash(git mv:*)",
-      "Bash(mkdir:*)"
+      "Bash(mkdir:*)",
+      "Bash(npx:*)"
     ],
     "deny": [],
     "ask": []

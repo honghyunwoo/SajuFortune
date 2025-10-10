@@ -193,8 +193,12 @@ app.use((req, res, next) => {
   // 구독 관리 라우트 등록
   registerSubscriptionRoutes(app);
 
-  // B2B API 라우트 등록
-  registerApiRoutes(app);
+  // B2B API 라우트 등록 (구 버전 - TODO: 제거 예정)
+  // registerApiRoutes(app);
+
+  // 신규 B2B API 라우트 등록 (실제 사주 계산 통합)
+  const { registerB2BRoutes } = await import('./api/b2b-routes');
+  registerB2BRoutes(app);
 
   // 개발 환경에서 테스트 API 키 초기화
   if (process.env.NODE_ENV === 'development') {

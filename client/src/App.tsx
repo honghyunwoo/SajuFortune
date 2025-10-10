@@ -18,6 +18,7 @@ import NotFound from "@/pages/not-found";
 import BlogIndex from "@/pages/blog/index";
 import BlogPost from "@/pages/blog/post";
 import Compatibility from "@/pages/compatibility";
+import MonthlyFortune from "@/pages/monthly-fortune";
 
 // 무거운 페이지들은 lazy loading으로 최적화
 const Results = lazy(() => import("@/pages/results"));
@@ -43,6 +44,7 @@ function Router() {
         <Route path="/checkout/:readingId" component={Checkout} />
         <Route path="/results/:readingId" component={Results} />
         <Route path="/compatibility" component={Compatibility} />
+        <Route path="/monthly-fortune" component={MonthlyFortune} />
         <Route path="/blog" component={BlogIndex} />
         <Route path="/blog/:slug" component={BlogPost} />
         <Route path="/terms-of-service" component={TermsOfService} />

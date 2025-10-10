@@ -46,34 +46,41 @@
     <link rel="manifest" href="/site.webmanifest" />
     <meta name="theme-color" content="#8B2332" />
 
-    <!-- Structured Data (JSON-LD) -->
+    <!-- Structured Data (JSON-LD) - WebApplication -->
     <script type="application/ld+json">
     {
       "@context": "https://schema.org",
       "@type": "WebApplication",
       "name": "운명의 해답",
+      "alternateName": "SajuFortune",
       "applicationCategory": "LifestyleApplication",
       "operatingSystem": "Any",
+      "browserRequirements": "Requires JavaScript. Requires HTML5.",
       "offers": {
         "@type": "Offer",
         "price": "0",
-        "priceCurrency": "KRW"
+        "priceCurrency": "KRW",
+        "availability": "https://schema.org/InStock"
       },
       "description": "한국천문연구원 정밀 24절기 데이터 기반 무료 사주팔자 분석 서비스. 격국, 대운, 십이운성 등 전문적인 명리학 분석 제공.",
       "url": "https://sajufortune.com",
       "screenshot": "https://sajufortune.com/og-image.png",
+      "image": "https://sajufortune.com/og-image.png",
       "featureList": [
         "무료 사주팔자 계산",
         "격국(格局) 분석",
         "대운(大運) 80년 생애 운세",
         "십이운성(十二運星) 분석",
         "PDF 다운로드",
+        "카카오톡 공유",
         "회원가입 불필요"
       ],
+      "inLanguage": "ko-KR",
       "provider": {
         "@type": "Organization",
         "name": "운명의 해답",
-        "url": "https://sajufortune.com"
+        "url": "https://sajufortune.com",
+        "logo": "https://sajufortune.com/logo.png"
       },
       "aggregateRating": {
         "@type": "AggregateRating",
@@ -82,6 +89,107 @@
         "bestRating": "5",
         "worstRating": "1"
       }
+    }
+    </script>
+
+    <!-- Structured Data (JSON-LD) - Organization -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "Organization",
+      "name": "운명의 해답",
+      "alternateName": "SajuFortune",
+      "url": "https://sajufortune.com",
+      "logo": "https://sajufortune.com/logo.png",
+      "description": "한국천문연구원 정밀 24절기 데이터 기반 무료 사주팔자 분석 서비스",
+      "foundingDate": "2025",
+      "sameAs": [
+        "https://twitter.com/SajuFortune",
+        "https://www.facebook.com/SajuFortune"
+      ],
+      "contactPoint": {
+        "@type": "ContactPoint",
+        "contactType": "Customer Service",
+        "availableLanguage": "Korean"
+      }
+    }
+    </script>
+
+    <!-- Structured Data (JSON-LD) - BreadcrumbList -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "홈",
+          "item": "https://sajufortune.com/"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "무료 사주 보기",
+          "item": "https://sajufortune.com/#fortune"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "프리미엄 사주 분석",
+          "item": "https://sajufortune.com/#premium"
+        }
+      ]
+    }
+    </script>
+
+    <!-- Structured Data (JSON-LD) - FAQPage -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "FAQPage",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "사주팔자는 무엇인가요?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "사주팔자는 태어난 연월일시(年月日時)를 천간지지(天干地支)로 표현한 것으로, 총 8글자로 이루어져 있습니다. 이를 통해 개인의 성격, 적성, 운세 등을 분석하는 한국 전통 명리학입니다."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "격국(格局)이란 무엇인가요?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "격국은 사주팔자의 구조와 균형을 분석하여 개인의 성향과 인생 방향을 판단하는 명리학의 핵심 개념입니다. 정격 8가지(정관격, 편관격, 정인격, 편인격, 식신격, 상관격, 정재격, 편재격)와 특수격 2가지(종격, 화격)로 분류됩니다."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "대운(大運)은 무엇인가요?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "대운은 10년 단위로 변화하는 인생의 큰 흐름을 나타냅니다. 80년 생애 동안 8번의 대운 전환기를 겪게 되며, 각 대운마다 다른 에너지와 기회가 주어집니다."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "무료 서비스인가요?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "네, 기본 사주팔자 분석은 100% 무료입니다. 회원가입 없이 즉시 이용 가능하며, 프리미엄 분석(격국, 대운, 십이운성)도 무료로 제공됩니다."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "정확도는 어떻게 보장하나요?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "한국천문연구원의 정밀 24절기 데이터를 기반으로 계산하며, 전통 명리학 이론을 충실히 따릅니다. 음력/양력 변환도 정확하게 처리됩니다."
+          }
+        }
+      ]
     }
     </script>
 

@@ -5,6 +5,7 @@ import { registerBlogRoutes } from "./blog";
 import { registerCompatibilityRoutes } from "./compatibility";
 import { registerMonthlyFortuneRoutes } from "./monthly-fortune";
 import { registerSubscriptionRoutes } from "./subscription-simple";
+import { registerApiRoutes, initializeTestApiKeys } from "./api/index";
 import { setupVite, serveStatic, log as viteLog } from "./vite";
 import session from "express-session";
 import connectPGSimple from "connect-pg-simple";
@@ -195,6 +196,14 @@ app.use((req, res, next) => {
 
   // 구독 관리 라우트 등록
   registerSubscriptionRoutes(app);
+
+  // B2B API 라우트 등록
+  registerApiRoutes(app);
+
+  // 개발 환경에서 테스트 API 키 초기화
+  if (process.env.NODE_ENV === 'development') {
+    initializeTestApiKeys();
+  }
 
   // 헬스 체크 엔드포인트
   app.get('/health', healthCheck);

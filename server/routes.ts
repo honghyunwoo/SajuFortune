@@ -242,12 +242,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }
 
-      // 결제 실패 처리 (PRD 요구사항 추가)
+      // 결제 실패 처리
       if (event.type === 'payment_intent.payment_failed') {
         const paymentIntent = event.data.object;
-        log.payment('failed', paymentIntent.id, paymentIntent.amount, { 
-          error: paymentIntent.last_payment_error?.message 
+        log.payment('failed', paymentIntent.id, paymentIntent.amount, {
+          error: paymentIntent.last_payment_error?.message
         });
+      }
+
+      // 환불 처리
+      if (event.type === 'charge.refunded') {
+        const charge = event.data.object;
+        const paymentIntentId = charge.payment_intent;
+
+        if (paymentIntentId) {
+          // TODO: 환불 상태를 DB에 기록하는 로직 추가
+          log.payment('refunded', paymentIntentId as string, charge.amount_refunded, {
+            refundReason: charge.refunds?.data[0]?.reason || 'unknown'
+          });
+        }
       }
 
       res.json({ received: true });

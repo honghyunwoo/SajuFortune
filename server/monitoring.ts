@@ -234,7 +234,28 @@ export const healthCheck = async (req: Request, res: Response) => {
     }
   }
 
-  const overallStatus = 
+  // Stripe 연결 확인
+  let stripeStatus: 'ok' | 'error' | 'disabled' = 'disabled';
+  try {
+    if (process.env.STRIPE_SECRET_KEY) {
+      // Stripe 연결 확인 - API 키 유효성 테스트
+      const Stripe = (await import('stripe')).default;
+      const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
+        apiVersion: "2025-08-27.basil",
+      });
+
+      // Balance retrieve는 가장 가벼운 API 호출
+      await stripe.balance.retrieve();
+      stripeStatus = 'ok';
+    }
+  } catch (error) {
+    if (process.env.STRIPE_SECRET_KEY) {
+      stripeStatus = 'error';
+      warnings.push('Stripe API connection failed');
+    }
+  }
+
+  const overallStatus =
     dbStatus === 'error' ? 'unhealthy' :
     warnings.length > 2 ? 'degraded' :
     warnings.length > 0 ? 'warning' :
@@ -253,6 +274,9 @@ export const healthCheck = async (req: Request, res: Response) => {
       redis: {
         status: redisStatus,
         latency: redisLatency
+      },
+      stripe: {
+        status: stripeStatus
       }
     },
     metrics: {

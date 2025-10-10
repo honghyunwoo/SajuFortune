@@ -4,6 +4,7 @@ import { registerRoutes } from "./routes";
 import { registerBlogRoutes } from "./blog";
 import { registerCompatibilityRoutes } from "./compatibility";
 import { registerMonthlyFortuneRoutes } from "./monthly-fortune";
+import { registerSubscriptionRoutes } from "./subscription-simple";
 import { setupVite, serveStatic, log as viteLog } from "./vite";
 import session from "express-session";
 import connectPGSimple from "connect-pg-simple";
@@ -191,6 +192,9 @@ app.use((req, res, next) => {
 
   // 월별 운세 라우트 등록
   registerMonthlyFortuneRoutes(app);
+
+  // 구독 관리 라우트 등록
+  registerSubscriptionRoutes(app);
 
   // 헬스 체크 엔드포인트
   app.get('/health', healthCheck);

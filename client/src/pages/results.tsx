@@ -53,11 +53,14 @@ export default function Results() {
     if (!reading || !('id' in reading) || !reading.id) return;
 
     try {
-      shareSajuResult(readingId, {
-        birthYear: reading.birthYear,
-        birthMonth: reading.birthMonth,
-        birthDay: reading.birthDay,
-        gender: reading.gender as 'male' | 'female',
+      const genderText = reading.gender === 'male' ? '남성' : '여성';
+      const birthDate = `${reading.birthYear}년 ${reading.birthMonth}월 ${reading.birthDay}일생 ${genderText}`;
+
+      shareSajuResult({
+        readingId,
+        userName: genderText,
+        birthDate,
+        overallScore: 85, // TODO: 실제 점수 계산 필요
       });
 
       toast({

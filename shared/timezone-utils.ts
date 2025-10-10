@@ -1,10 +1,15 @@
 /**
  * 타임존 처리 유틸리티
  * 한국 사주학은 KST(UTC+9) 기준으로 계산되어야 함
+ *
+ * Luxon 기반 정확한 타임존 처리 추가
  */
+
+import { DateTime } from 'luxon';
 
 // 한국 표준시(KST) 오프셋: UTC+9
 export const KST_OFFSET = 9 * 60; // 분 단위
+export const SEOUL_TIMEZONE = 'Asia/Seoul';
 
 /**
  * UTC 시간을 KST 시간으로 변환
@@ -112,4 +117,96 @@ export function debugTimezone(date: Date): void {
   console.log('  - ISO String:', date.toISOString());
   console.log('  - Timezone Offset:', date.getTimezoneOffset(), '분');
   console.log('  - KST로 변환:', toKSTString(date));
+}
+
+// ============================================================================
+// Luxon 기반 타임존 처리 (정확한 DST/절기 계산)
+// ============================================================================
+
+/**
+ * Luxon DateTime을 Asia/Seoul 기준으로 생성
+ * @param year 년
+ * @param month 월 (1-12)
+ * @param day 일
+ * @param hour 시 (0-23)
+ * @param minute 분 (0-59)
+ * @param second 초 (0-59)
+ * @returns Asia/Seoul 기준 DateTime 객체
+ */
+export function createSeoulDateTime(
+  year: number,
+  month: number,
+  day: number,
+  hour: number = 0,
+  minute: number = 0,
+  second: number = 0
+): DateTime {
+  return DateTime.fromObject(
+    { year, month, day, hour, minute, second },
+    { zone: SEOUL_TIMEZONE }
+  );
+}
+
+/**
+ * 현재 시각을 Asia/Seoul 기준으로 반환
+ * @returns Asia/Seoul 기준 현재 시각
+ */
+export function nowInSeoul(): DateTime {
+  return DateTime.now().setZone(SEOUL_TIMEZONE);
+}
+
+/**
+ * Luxon DateTime을 JavaScript Date로 변환
+ * @param dt Luxon DateTime 객체
+ * @returns JavaScript Date 객체
+ */
+export function toJSDate(dt: DateTime): Date {
+  return dt.toJSDate();
+}
+
+/**
+ * JavaScript Date를 Luxon DateTime (Seoul)로 변환
+ * @param date JavaScript Date 객체
+ * @returns Asia/Seoul 기준 DateTime
+ */
+export function fromJSDate(date: Date): DateTime {
+  return DateTime.fromJSDate(date, { zone: SEOUL_TIMEZONE });
+}
+
+/**
+ * 입력 데이터를 Asia/Seoul 기준 Date로 변환 (서버 API 사용)
+ * @param year 년
+ * @param month 월 (1-12)
+ * @param day 일
+ * @param hour 시 (0-23)
+ * @param minute 분 (0-59)
+ * @returns Asia/Seoul 기준으로 해석된 JavaScript Date
+ */
+export function createSeoulDate(
+  year: number,
+  month: number,
+  day: number,
+  hour: number = 0,
+  minute: number = 0
+): Date {
+  const dt = createSeoulDateTime(year, month, day, hour, minute);
+  return dt.toJSDate();
+}
+
+/**
+ * DateTime 유효성 검증
+ * @param dt DateTime 객체
+ * @returns 유효한 DateTime인지 여부
+ */
+export function isValidDateTime(dt: DateTime): boolean {
+  return dt.isValid;
+}
+
+/**
+ * DateTime 포맷팅 (ISO 8601 with timezone)
+ * @param dt DateTime 객체
+ * @returns "2025-10-10T14:30:00+09:00" 형식
+ */
+export function formatSeoulDateTime(dt: DateTime): string {
+  return dt.setZone(SEOUL_TIMEZONE).toISO() || '';
 }

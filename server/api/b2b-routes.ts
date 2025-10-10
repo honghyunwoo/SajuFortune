@@ -8,6 +8,7 @@ import { apiKeyService } from '../api-keys';
 import { calculatePremiumSaju } from '@shared/premium-calculator';
 import { calculateCompatibility } from '@shared/compatibility-calculator';
 import { calculateMonthlyFortune } from '@shared/monthly-fortune-calculator';
+import { createSeoulDate } from '@shared/timezone-utils';
 import { log } from '../logger';
 import type { HeavenlyStem, EarthlyBranch } from '@shared/compatibility-calculator';
 
@@ -84,8 +85,8 @@ export function registerB2BRoutes(app: Express) {
         });
       }
 
-      // 사주 계산
-      const birthDate = new Date(birthYear, birthMonth - 1, birthDay, birthHour, birthMinute);
+      // 사주 계산 (Asia/Seoul 타임존 기준)
+      const birthDate = createSeoulDate(birthYear, birthMonth, birthDay, birthHour, birthMinute);
       const sajuData = calculatePremiumSaju(birthDate, birthHour, {
         gender: gender as 'male' | 'female',
         precision: 'premium',
@@ -140,10 +141,10 @@ export function registerB2BRoutes(app: Express) {
         });
       }
 
-      // Person 1 사주 계산
-      const person1BirthDate = new Date(
+      // Person 1 사주 계산 (Asia/Seoul 타임존 기준)
+      const person1BirthDate = createSeoulDate(
         person1.birthYear,
-        person1.birthMonth - 1,
+        person1.birthMonth,
         person1.birthDay,
         person1.birthHour,
         person1.birthMinute || 0
@@ -153,10 +154,10 @@ export function registerB2BRoutes(app: Express) {
         precision: 'premium',
       });
 
-      // Person 2 사주 계산
-      const person2BirthDate = new Date(
+      // Person 2 사주 계산 (Asia/Seoul 타임존 기준)
+      const person2BirthDate = createSeoulDate(
         person2.birthYear,
-        person2.birthMonth - 1,
+        person2.birthMonth,
         person2.birthDay,
         person2.birthHour,
         person2.birthMinute || 0
@@ -247,8 +248,8 @@ export function registerB2BRoutes(app: Express) {
         });
       }
 
-      // 사주 계산
-      const birthDate = new Date(birthYear, birthMonth - 1, birthDay, birthHour, birthMinute);
+      // 사주 계산 (Asia/Seoul 타임존 기준)
+      const birthDate = createSeoulDate(birthYear, birthMonth, birthDay, birthHour, birthMinute);
       const sajuData = calculatePremiumSaju(birthDate, birthHour, {
         gender: gender as 'male' | 'female',
         precision: 'premium',

@@ -7,6 +7,7 @@ import type { Express } from 'express';
 import { calculateMonthlyFortune } from '../shared/monthly-fortune-calculator';
 import type { HeavenlyStem, EarthlyBranch } from '../shared/compatibility-calculator';
 import { calculatePremiumSaju } from '@shared/premium-calculator';
+import { createSeoulDate } from '@shared/timezone-utils';
 import { log } from './logger';
 
 interface BirthInput {
@@ -36,10 +37,10 @@ export function registerMonthlyFortuneRoutes(app: Express) {
         });
       }
 
-      // 사주 계산
-      const birthDate = new Date(
+      // 사주 계산 (Asia/Seoul 타임존 기준)
+      const birthDate = createSeoulDate(
         birthData.birthYear,
-        birthData.birthMonth - 1,
+        birthData.birthMonth,
         birthData.birthDay,
         birthData.birthHour,
         birthData.birthMinute || 0

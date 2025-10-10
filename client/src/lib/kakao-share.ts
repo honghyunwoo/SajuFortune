@@ -89,19 +89,16 @@ export function shareToKakao(data: ShareData) {
 /**
  * 사주 결과 카카오톡 공유
  */
-export function shareSajuResult(readingId: string, userData: {
-  birthYear: number;
-  birthMonth: number;
-  birthDay: number;
-  gender: 'male' | 'female';
+export function shareSajuResult(data: {
+  readingId: string;
+  userName: string;
+  birthDate: string;
+  overallScore: number;
 }) {
-  const genderText = userData.gender === 'male' ? '남성' : '여성';
-  const birthDate = `${userData.birthYear}년 ${userData.birthMonth}월 ${userData.birthDay}일`;
-
   shareToKakao({
-    title: `${birthDate}생 ${genderText} 사주팔자 분석`,
-    description: '한국천문연구원 24절기 데이터 기반 정확한 사주 분석 결과입니다. 격국, 대운, 십이운성을 포함한 전문 명리학 분석을 확인하세요.',
-    link: `https://sajufortune.com/results/${readingId}?utm_source=kakao&utm_medium=share&utm_campaign=saju_result`,
+    title: `${data.userName}님의 사주팔자 분석 결과`,
+    description: `${data.birthDate} | 종합 점수: ${data.overallScore}점\n한국천문연구원 24절기 데이터 기반 정확한 사주 분석 결과입니다.`,
+    link: `https://sajufortune.com/results/${data.readingId}?utm_source=kakao&utm_medium=share&utm_campaign=saju_result`,
     buttonText: '내 사주 보기',
   });
 }
@@ -109,11 +106,55 @@ export function shareSajuResult(readingId: string, userData: {
 /**
  * 궁합 결과 카카오톡 공유
  */
-export function shareCompatibilityResult(person1Name: string, person2Name: string, score: number) {
+export function shareCompatibilityResult(data: {
+  person1Name: string;
+  person2Name: string;
+  compatibilityScore: number;
+}) {
   shareToKakao({
-    title: `${person1Name} ❤️ ${person2Name} 궁합 분석`,
-    description: `궁합 점수: ${score}점! 두 사람의 사주 궁합을 자세히 확인해보세요.`,
+    title: `${data.person1Name} ❤️ ${data.person2Name} 궁합 분석`,
+    description: `궁합 점수: ${data.compatibilityScore}점! 두 사람의 사주 궁합을 자세히 확인해보세요.`,
     link: `https://sajufortune.com/compatibility?utm_source=kakao&utm_medium=share&utm_campaign=compatibility`,
     buttonText: '궁합 분석 보기',
+  });
+}
+
+/**
+ * 월별 운세 카카오톡 공유
+ */
+export function shareMonthlyFortune(data: {
+  userName: string;
+  currentMonth: number;
+  monthScore: number;
+}) {
+  const monthNames = [
+    '1월', '2월', '3월', '4월', '5월', '6월',
+    '7월', '8월', '9월', '10월', '11월', '12월'
+  ];
+  const monthText = monthNames[data.currentMonth - 1] || `${data.currentMonth}월`;
+
+  shareToKakao({
+    title: `${data.userName}님의 ${monthText} 운세`,
+    description: `이번 달 운세 점수: ${data.monthScore}점! 자세한 월별 운세를 확인해보세요.`,
+    link: `https://sajufortune.com/monthly-fortune?utm_source=kakao&utm_medium=share&utm_campaign=monthly_fortune`,
+    buttonText: '월별 운세 보기',
+  });
+}
+
+/**
+ * 일반 페이지 카카오톡 공유
+ */
+export function shareGenericPage(data: {
+  title: string;
+  description: string;
+  imageUrl?: string;
+  url?: string;
+}) {
+  shareToKakao({
+    title: data.title,
+    description: data.description,
+    imageUrl: data.imageUrl,
+    link: data.url || 'https://sajufortune.com?utm_source=kakao&utm_medium=share&utm_campaign=generic',
+    buttonText: '자세히 보기',
   });
 }

@@ -7,6 +7,7 @@ import { createFortuneReadingSchema, createDonationSchema } from "@shared/schema
 import { calculatePremiumSaju } from "@shared/premium-calculator";
 import { premiumToSajuData } from "@shared/adapters";
 import { buildAnalysisResult } from "@shared/engine/analysis";
+import { createSeoulDate } from "@shared/timezone-utils";
 import { sajuCalculationRateLimit, donationRateLimit } from "./security";
 import { cacheService } from "./cache";
 import { sendContactFormEmail, sendAutoReplyEmail } from "./email";
@@ -70,12 +71,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       log.cache('miss', `saju:${cacheKey.year}:${cacheKey.month}:${cacheKey.day}`);
       
-      // Calculate saju pillars using premium engine
-      const birthDate = new Date(
-        validatedData.birthYear, 
-        validatedData.birthMonth - 1, 
-        validatedData.birthDay, 
-        validatedData.birthHour, 
+      // Calculate saju pillars using premium engine (Asia/Seoul 타임존 기준)
+      const birthDate = createSeoulDate(
+        validatedData.birthYear,
+        validatedData.birthMonth,
+        validatedData.birthDay,
+        validatedData.birthHour,
         validatedData.birthMinute
       );
       

@@ -4,9 +4,20 @@
  */
 
 import { describe, it, expect, beforeAll } from 'vitest';
-import { storage } from '../../server/storage';
 
-describe('Stripe Webhook Integration', () => {
+// DATABASE_URL이 설정되지 않은 경우 테스트 스킵
+const shouldSkip = !process.env.DATABASE_URL;
+
+describe.skipIf(shouldSkip)('Stripe Webhook Integration', () => {
+  // storage는 조건부 import로 처리
+  let storage: any;
+
+  beforeAll(async () => {
+    if (!shouldSkip) {
+      const { storage: storageModule } = await import('../../server/storage');
+      storage = storageModule;
+    }
+  });
   describe('payment_intent.succeeded 이벤트', () => {
     it('should update donation status to paid', async () => {
       // 테스트 데이터 준비

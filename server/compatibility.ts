@@ -7,6 +7,7 @@ import type { Express } from 'express';
 import { calculateCompatibility } from '../shared/compatibility-calculator';
 import type { HeavenlyStem, EarthlyBranch } from '../shared/compatibility-calculator';
 import { calculatePremiumSaju } from '@shared/premium-calculator';
+import { createSeoulDate } from '@shared/timezone-utils';
 import { log } from './logger';
 
 interface PersonInput {
@@ -48,18 +49,18 @@ export function registerCompatibilityRoutes(app: Express) {
         });
       }
 
-      // 각 사람의 사주 계산
-      const person1BirthDate = new Date(
+      // 각 사람의 사주 계산 (Asia/Seoul 타임존 기준)
+      const person1BirthDate = createSeoulDate(
         person1.birthYear,
-        person1.birthMonth - 1,
+        person1.birthMonth,
         person1.birthDay,
         person1.birthHour,
         person1.birthMinute
       );
 
-      const person2BirthDate = new Date(
+      const person2BirthDate = createSeoulDate(
         person2.birthYear,
-        person2.birthMonth - 1,
+        person2.birthMonth,
         person2.birthDay,
         person2.birthHour,
         person2.birthMinute

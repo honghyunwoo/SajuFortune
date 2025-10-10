@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { adaptPremiumToBasic } from '../client/src/lib/saju-adapter';
-import { calculatePremiumSaju } from '../client/src/lib/premium-calculator';
+import { calculatePremiumSaju } from '@shared/premium-calculator';
 import { 천간오행 } from '../shared/astro-data';
 
 describe('Saju Adapter - Corrected', () => {

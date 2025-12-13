@@ -88,8 +88,21 @@ export const users = pgTable("users", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   username: text("username").notNull().unique(),
   email: text("email").notNull().unique(),
-  password: text("password").notNull(),
+  password: text("password"), // nullable for social login users
+  profileImage: text("profile_image"),
+  authProvider: text("auth_provider").default("local"), // 'local' | 'google' | 'kakao' | 'naver'
   stripeCustomerId: text("stripe_customer_id"),
+  createdAt: timestamp("created_at").default(sql`now()`),
+});
+
+// 소셜 계정 연결 테이블 (한 사용자가 여러 소셜 계정 연결 가능)
+export const socialAccounts = pgTable("social_accounts", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  provider: text("provider").notNull(), // 'google' | 'kakao' | 'naver'
+  providerId: text("provider_id").notNull(), // 소셜 플랫폼의 사용자 ID
+  accessToken: text("access_token"),
+  refreshToken: text("refresh_token"),
   createdAt: timestamp("created_at").default(sql`now()`),
 });
 
@@ -119,6 +132,9 @@ export const donations = pgTable("donations", {
   message: text("message"),
   paymentIntentId: text("payment_intent_id"),
   isPaid: boolean("is_paid").default(false),
+  isRefunded: boolean("is_refunded").default(false), // Refund status
+  refundedAt: timestamp("refunded_at"), // Refund timestamp
+  refundReason: text("refund_reason"), // Refund reason
   createdAt: timestamp("created_at").default(sql`now()`),
 });
 
@@ -168,3 +184,4 @@ export type CreateFortuneReading = z.infer<typeof createFortuneReadingSchema>;
 export type InsertDonation = z.infer<typeof insertDonationSchema>;
 export type Donation = typeof donations.$inferSelect;
 export type CreateDonation = z.infer<typeof createDonationSchema>;
+export type SocialAccount = typeof socialAccounts.$inferSelect;

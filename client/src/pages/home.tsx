@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link } from "wouter";
-import { Star, Users, Tag, Gift, Crown, Play, Shield, Lock } from "lucide-react";
+import { Star, Users, Tag, Gift, Crown, Play, Shield, Lock, User } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -9,10 +9,13 @@ import ServiceComparison from "@/components/service-comparison";
 import LanguageSwitcher from "@/components/language-switcher";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import SEOHead, { generateHomeSEO } from "@/components/seo-head";
+import { useAuth } from "@/contexts/auth-context";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 export default function Home() {
   const [showForm, setShowForm] = useState(false);
   const { t } = useTranslation();
+  const { user, isAuthenticated } = useAuth();
 
   return (
     <div className="bg-background text-foreground antialiased">
@@ -36,12 +39,28 @@ export default function Home() {
                   {t('nav.blog')}
                 </Button>
               </Link>
-              <Button variant="ghost" size="sm" data-testid="button-login">
-                {t('common.login')}
-              </Button>
-              <Button size="sm" data-testid="button-premium">
-                {t('common.premium')}
-              </Button>
+              {isAuthenticated ? (
+                <Link href="/mypage">
+                  <Button variant="ghost" size="sm" className="flex items-center gap-2">
+                    <Avatar className="w-6 h-6">
+                      <AvatarImage src={user?.profileImage} />
+                      <AvatarFallback><User className="w-3 h-3" /></AvatarFallback>
+                    </Avatar>
+                    마이페이지
+                  </Button>
+                </Link>
+              ) : (
+                <Link href="/login">
+                  <Button variant="ghost" size="sm" data-testid="button-login">
+                    {t('common.login')}
+                  </Button>
+                </Link>
+              )}
+              <Link href="/premium">
+                <Button size="sm" data-testid="button-premium">
+                  {t('common.premium')}
+                </Button>
+              </Link>
               <LanguageSwitcher />
             </div>
           </div>

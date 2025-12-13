@@ -1,7 +1,7 @@
 import { useParams } from 'wouter';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Link } from 'wouter';
-import { ArrowLeft, Download, Star, Coffee, Share2 } from 'lucide-react';
+import { ArrowLeft, Download, Star, Coffee, Share2, Bookmark, BookmarkCheck } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import ResultDisplay from '@/components/result-display';
@@ -10,17 +10,61 @@ import { trackPdfDownload } from '@/lib/analytics';
 import { shareSajuResult } from '@/lib/kakao-share';
 import { useToast } from '@/hooks/use-toast';
 import SEOHead, { generateSajuResultSEO } from '@/components/seo-head';
+import { useAuth } from '@/contexts/auth-context';
 import type { FortuneReading } from '@shared/schema';
 
 export default function Results() {
   const params = useParams();
   const readingId = params.readingId!;
   const { toast } = useToast();
+  const { isAuthenticated, user } = useAuth();
+  const queryClient = useQueryClient();
 
   const { data: reading, isLoading, error } = useQuery<FortuneReading>({
     queryKey: ['/api/fortune-readings', readingId],
     enabled: !!readingId,
   });
+
+  // 현재 사주가 저장되어 있는지 확인
+  const isSaved = reading?.userId === user?.id;
+
+  // 저장 뮤테이션
+  const saveMutation = useMutation({
+    mutationFn: async () => {
+      const response = await fetch(`/api/fortune-readings/${readingId}/save`, {
+        method: 'POST',
+        credentials: 'include',
+      });
+      if (!response.ok) throw new Error('저장 실패');
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/fortune-readings', readingId] });
+      queryClient.invalidateQueries({ queryKey: ['my-readings'] });
+      toast({
+        title: "저장 완료",
+        description: "마이페이지에서 언제든지 다시 확인할 수 있습니다.",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "저장 실패",
+        description: "잠시 후 다시 시도해주세요.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleSave = () => {
+    if (!isAuthenticated) {
+      toast({
+        title: "로그인이 필요합니다",
+        description: "사주 결과를 저장하려면 먼저 로그인해주세요.",
+      });
+      return;
+    }
+    saveMutation.mutate();
+  };
 
   const handleDownloadPDF = async () => {
     if (!reading || !('id' in reading) || !reading.id) return;
@@ -132,8 +176,8 @@ export default function Results() {
               <span className="text-lg font-bold text-primary">운명의 해답</span>
             </div>
             <div className="flex items-center space-x-2">
-              <Button 
-                variant="outline" 
+              <Button
+                variant="outline"
                 size="sm"
                 onClick={handleDownloadPDF}
                 className="flex items-center gap-2"
@@ -141,6 +185,26 @@ export default function Results() {
               >
                 <Download className="w-4 h-4" />
                 PDF 다운로드
+              </Button>
+              <Button
+                variant={isSaved ? "secondary" : "outline"}
+                size="sm"
+                onClick={handleSave}
+                className="flex items-center gap-2"
+                disabled={isSaved || saveMutation.isPending}
+                data-testid="button-save"
+              >
+                {isSaved ? (
+                  <>
+                    <BookmarkCheck className="w-4 h-4" />
+                    저장됨
+                  </>
+                ) : (
+                  <>
+                    <Bookmark className="w-4 h-4" />
+                    {saveMutation.isPending ? '저장 중...' : '저장하기'}
+                  </>
+                )}
               </Button>
               <span className="px-3 py-1 rounded-full text-sm font-medium flex items-center gap-1 bg-primary text-primary-foreground">
                 <Star className="w-3 h-3" />

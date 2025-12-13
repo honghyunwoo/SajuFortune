@@ -67,9 +67,10 @@ class ApiKeyService {
    * API 키 생성
    */
   generateApiKey(name: string, tier: ApiTier, expiresAt: Date | null = null): string {
-    // 안전한 랜덤 키 생성: sk_live_XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+    // 안전한 랜덤 키 생성: saju_prod_XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
     const randomBytes = crypto.randomBytes(24);
-    const key = `sk_${process.env.NODE_ENV === 'production' ? 'live' : 'test'}_${randomBytes.toString('hex')}`;
+    const prefix = process.env.NODE_ENV === 'production' ? 'saju_prod' : 'saju_dev';
+    const key = `${prefix}_${randomBytes.toString('hex')}`;
 
     const limits = API_TIER_LIMITS[tier];
     const apiKey: ApiKey = {

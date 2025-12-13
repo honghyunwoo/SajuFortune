@@ -256,9 +256,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const paymentIntentId = charge.payment_intent;
 
         if (paymentIntentId) {
-          // TODO: 환불 상태를 DB에 기록하는 로직 추가
+          const refundReason = charge.refunds?.data[0]?.reason || 'requested_by_customer';
+
+          // DB에 환불 상태 기록
+          await storage.updateDonationRefund(paymentIntentId as string, refundReason);
+
           log.payment('refunded', paymentIntentId as string, charge.amount_refunded, {
-            refundReason: charge.refunds?.data[0]?.reason || 'unknown'
+            refundReason
           });
         }
       }
@@ -406,6 +410,87 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({
         success: false,
         message: "전체 캐시 초기화 실패: " + error.message
+      });
+    }
+  });
+
+  /**
+   * 현재 로그인한 사용자의 저장된 사주 목록 조회
+   * GET /api/users/me/readings
+   */
+  app.get("/api/users/me/readings", async (req, res) => {
+    try {
+      if (!req.isAuthenticated() || !req.user) {
+        return res.status(401).json({ error: "로그인이 필요합니다" });
+      }
+
+      const userId = (req.user as any).id;
+      const readings = await storage.getReadingsByUserId(userId);
+      res.json(readings);
+    } catch (error: any) {
+      log.error('[Readings] Failed to get user readings:', error);
+      res.status(500).json({
+        error: "저장된 사주 목록을 불러오는데 실패했습니다."
+      });
+    }
+  });
+
+  /**
+   * 사주 결과를 현재 사용자에게 저장
+   * POST /api/fortune-readings/:id/save
+   */
+  app.post("/api/fortune-readings/:id/save", async (req, res) => {
+    try {
+      if (!req.isAuthenticated() || !req.user) {
+        return res.status(401).json({ error: "로그인이 필요합니다" });
+      }
+
+      const readingId = req.params.id;
+      const userId = (req.user as any).id;
+
+      const reading = await storage.getFortuneReading(readingId);
+      if (!reading) {
+        return res.status(404).json({ error: "사주 결과를 찾을 수 없습니다" });
+      }
+
+      await storage.updateReadingUserId(readingId, userId);
+      res.json({ message: "저장되었습니다", readingId });
+    } catch (error: any) {
+      log.error('[Readings] Failed to save reading:', error);
+      res.status(500).json({
+        error: "사주 저장에 실패했습니다."
+      });
+    }
+  });
+
+  /**
+   * 사주 저장 해제 (사용자 연결 해제)
+   * DELETE /api/fortune-readings/:id/unsave
+   */
+  app.delete("/api/fortune-readings/:id/unsave", async (req, res) => {
+    try {
+      if (!req.isAuthenticated() || !req.user) {
+        return res.status(401).json({ error: "로그인이 필요합니다" });
+      }
+
+      const readingId = req.params.id;
+      const userId = (req.user as any).id;
+
+      const reading = await storage.getFortuneReading(readingId);
+      if (!reading) {
+        return res.status(404).json({ error: "사주 결과를 찾을 수 없습니다" });
+      }
+
+      if (reading.userId !== userId) {
+        return res.status(403).json({ error: "권한이 없습니다" });
+      }
+
+      await storage.removeReadingFromUser(readingId);
+      res.json({ message: "삭제되었습니다", readingId });
+    } catch (error: any) {
+      log.error('[Readings] Failed to unsave reading:', error);
+      res.status(500).json({
+        error: "사주 삭제에 실패했습니다."
       });
     }
   });

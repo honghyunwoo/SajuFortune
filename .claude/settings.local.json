@@ -50,7 +50,22 @@
       "Bash(netstat:*)",
       "Bash(findstr:*)",
       "Bash(taskkill:*)",
-      "Bash(git rm:*)"
+      "Bash(git rm:*)",
+      "Bash(npm run preview:*)",
+      "Bash(npm start)",
+      "Bash(echo $NODE_ENV)",
+      "Bash(powershell:*)",
+      "Bash(NODE_ENV=production npm start)",
+      "Bash(cross-env:*)",
+      "Bash(NODE_ENV=production PORT=5001 node dist/index.js)",
+      "Bash(NODE_ENV=production PORT=5002 node dist/index.js)",
+      "Bash(npm run db:generate:*)",
+      "Bash(where:*)",
+      "Bash(npm --version:*)",
+      "Bash(if [ -d \"dist\" ])",
+      "Bash(then echo \"dist exists\")",
+      "Bash(else echo \"dist not found\")",
+      "Bash(fi)"
     ],
     "deny": [],
     "ask": []

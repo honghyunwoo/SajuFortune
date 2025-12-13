@@ -67,14 +67,20 @@ export default function FortuneForm() {
   return (
     <Card>
       <CardContent className="p-8">
-        <form onSubmit={handleSubmit} className="space-y-6" data-testid="form-fortune-reading">
+        <form
+          onSubmit={handleSubmit}
+          className="space-y-6"
+          data-testid="form-fortune-reading"
+          aria-label="사주 정보 입력 폼"
+        >
           {/* Gender Selection */}
-          <div>
-            <Label className="block text-sm font-medium text-foreground mb-3">성별</Label>
+          <div role="group" aria-labelledby="gender-label">
+            <Label id="gender-label" className="block text-sm font-medium text-foreground mb-3">성별</Label>
             <RadioGroup
               value={formData.gender}
               onValueChange={(value) => updateFormData("gender", value)}
               className="flex space-x-4"
+              aria-label="성별 선택"
             >
               <div className="flex items-center space-x-2">
                 <RadioGroupItem value="male" id="male" data-testid="radio-male" />
@@ -88,14 +94,18 @@ export default function FortuneForm() {
           </div>
 
           {/* Birth Date */}
-          <div>
-            <Label className="block text-sm font-medium text-foreground mb-3">생년월일</Label>
+          <div role="group" aria-labelledby="birthdate-label">
+            <Label id="birthdate-label" className="block text-sm font-medium text-foreground mb-3">생년월일</Label>
             <div className="flex space-x-2">
               <Select
                 value={formData.birthYear.toString()}
                 onValueChange={(value) => updateFormData("birthYear", parseInt(value))}
               >
-                <SelectTrigger className="flex-1" data-testid="select-year">
+                <SelectTrigger
+                  className="flex-1"
+                  data-testid="select-year"
+                  aria-label="출생 년도 선택"
+                >
                   <SelectValue placeholder="년도" />
                 </SelectTrigger>
                 <SelectContent>
@@ -111,7 +121,11 @@ export default function FortuneForm() {
                 value={formData.birthMonth.toString()}
                 onValueChange={(value) => updateFormData("birthMonth", parseInt(value))}
               >
-                <SelectTrigger className="flex-1" data-testid="select-month">
+                <SelectTrigger
+                  className="flex-1"
+                  data-testid="select-month"
+                  aria-label="출생 월 선택"
+                >
                   <SelectValue placeholder="월" />
                 </SelectTrigger>
                 <SelectContent>
@@ -127,7 +141,11 @@ export default function FortuneForm() {
                 value={formData.birthDay.toString()}
                 onValueChange={(value) => updateFormData("birthDay", parseInt(value))}
               >
-                <SelectTrigger className="flex-1" data-testid="select-day">
+                <SelectTrigger
+                  className="flex-1"
+                  data-testid="select-day"
+                  aria-label="출생 일 선택"
+                >
                   <SelectValue placeholder="일" />
                 </SelectTrigger>
                 <SelectContent>
@@ -142,8 +160,8 @@ export default function FortuneForm() {
           </div>
 
           {/* Birth Time */}
-          <div>
-            <Label className="block text-sm font-medium text-foreground mb-3">
+          <div role="group" aria-labelledby="birthtime-label">
+            <Label id="birthtime-label" className="block text-sm font-medium text-foreground mb-3">
               태어난 시간
               <span className="text-sm text-muted-foreground ml-1">(모르면 12:00으로 설정)</span>
             </Label>
@@ -152,7 +170,11 @@ export default function FortuneForm() {
                 value={formData.birthHour.toString()}
                 onValueChange={(value) => updateFormData("birthHour", parseInt(value))}
               >
-                <SelectTrigger className="flex-1" data-testid="select-hour">
+                <SelectTrigger
+                  className="flex-1"
+                  data-testid="select-hour"
+                  aria-label="출생 시 선택"
+                >
                   <SelectValue placeholder="시" />
                 </SelectTrigger>
                 <SelectContent>
@@ -168,7 +190,11 @@ export default function FortuneForm() {
                 value={formData.birthMinute.toString()}
                 onValueChange={(value) => updateFormData("birthMinute", parseInt(value))}
               >
-                <SelectTrigger className="flex-1" data-testid="select-minute">
+                <SelectTrigger
+                  className="flex-1"
+                  data-testid="select-minute"
+                  aria-label="출생 분 선택"
+                >
                   <SelectValue placeholder="분" />
                 </SelectTrigger>
                 <SelectContent>
@@ -182,12 +208,13 @@ export default function FortuneForm() {
           </div>
 
           {/* Calendar Type */}
-          <div>
-            <Label className="block text-sm font-medium text-foreground mb-3">달력 기준</Label>
+          <div role="group" aria-labelledby="calendar-label">
+            <Label id="calendar-label" className="block text-sm font-medium text-foreground mb-3">달력 기준</Label>
             <RadioGroup
               value={formData.calendarType}
               onValueChange={(value) => updateFormData("calendarType", value)}
               className="flex space-x-4"
+              aria-label="달력 기준 선택"
             >
               <div className="flex items-center space-x-2">
                 <RadioGroupItem value="solar" id="solar" data-testid="radio-solar" />
@@ -202,7 +229,11 @@ export default function FortuneForm() {
 
           {/* Information Notice */}
           <div className="border-t border-border pt-6">
-            <div className="bg-primary/5 border border-primary/20 rounded-lg p-4">
+            <div
+              className="bg-primary/5 border border-primary/20 rounded-lg p-4"
+              role="alert"
+              aria-label="서비스 안내"
+            >
               <h3 className="font-medium text-foreground mb-2">🎉 모든 기능이 무료입니다!</h3>
               <p className="text-sm text-muted-foreground">
                 상세 운세 분석, 궁합, 직업운, 월별 예측 등 모든 기능을 무료로 제공합니다.
@@ -212,12 +243,13 @@ export default function FortuneForm() {
           </div>
 
           {/* Submit Button */}
-          <Button 
-            type="submit" 
-            className="w-full" 
+          <Button
+            type="submit"
+            className="w-full"
             size="lg"
             disabled={createReadingMutation.isPending}
             data-testid="button-submit-fortune"
+            aria-label={createReadingMutation.isPending ? "사주 분석 중" : "사주풀이 시작하기"}
           >
             {createReadingMutation.isPending ? (
               <>

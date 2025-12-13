@@ -5,9 +5,14 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { HelmetProvider } from "react-helmet-async";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { AuthProvider } from "@/contexts/auth-context";
 import { trackPageView } from "@/lib/analytics";
 import Home from "@/pages/home";
 import NotFound from "@/pages/not-found";
+
+// 인증 관련 페이지
+const Login = lazy(() => import("@/pages/login"));
+const MyPage = lazy(() => import("@/pages/mypage"));
 
 // 무거운 페이지들은 lazy loading으로 최적화
 const Results = lazy(() => import("@/pages/results"));
@@ -45,6 +50,8 @@ function Router() {
     >
       <Switch>
         <Route path="/" component={Home} />
+        <Route path="/login" component={Login} />
+        <Route path="/mypage" component={MyPage} />
         <Route path="/checkout/:readingId" component={Checkout} />
         <Route path="/results/:readingId" component={Results} />
         <Route path="/compatibility" component={Compatibility} />
@@ -69,10 +76,12 @@ function App() {
   return (
     <HelmetProvider>
       <QueryClientProvider client={queryClient}>
-        <TooltipProvider>
-          <Toaster />
-          <Router />
-        </TooltipProvider>
+        <AuthProvider>
+          <TooltipProvider>
+            <Toaster />
+            <Router />
+          </TooltipProvider>
+        </AuthProvider>
       </QueryClientProvider>
     </HelmetProvider>
   );

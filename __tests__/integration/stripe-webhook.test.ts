@@ -68,10 +68,31 @@ describe.skipIf(shouldSkip)('Stripe Webhook Integration', () => {
       expect(true).toBe(true);
     });
 
-    it('charge.refunded 이벤트는 로깅만 수행', () => {
-      // 환불은 현재 로깅만 수행
-      // TODO: 향후 DB에 환불 상태 기록 필요
-      expect(true).toBe(true);
+    it('charge.refunded 이벤트는 DB에 환불 상태를 기록해야 함', async () => {
+      // 테스트 데이터 준비: 먼저 결제 완료된 donation 생성
+      const testDonation = await storage.createDonation({
+        readingId: 'test-reading-refund',
+        amount: 15000,
+        donorName: '환불 테스트',
+        message: '환불 요청',
+        paymentIntentId: 'pi_test_refund',
+        isPaid: true // 결제 완료 상태
+      });
+
+      expect(testDonation.isPaid).toBe(true);
+      expect(testDonation.isRefunded).toBe(false);
+
+      // Webhook 환불 처리 시뮬레이션
+      await storage.updateDonationRefund('pi_test_refund', 'requested_by_customer');
+
+      // 업데이트 확인
+      const donations = await storage.getDonationsByReadingId('test-reading-refund');
+      const refundedDonation = donations.find(d => d.paymentIntentId === 'pi_test_refund');
+
+      expect(refundedDonation?.isRefunded).toBe(true);
+      expect(refundedDonation?.refundReason).toBe('requested_by_customer');
+      expect(refundedDonation?.refundedAt).toBeDefined();
+      expect(refundedDonation?.refundedAt).toBeInstanceOf(Date);
     });
   });
 

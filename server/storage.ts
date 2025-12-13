@@ -35,10 +35,14 @@ export interface IStorage {
   getFortuneReadingBySessionId(
     sessionId: string,
   ): Promise<FortuneReading | undefined>;
+  getReadingsByUserId(userId: string): Promise<FortuneReading[]>;
+  updateReadingUserId(readingId: string, userId: string): Promise<FortuneReading>;
+  removeReadingFromUser(readingId: string): Promise<FortuneReading>;
 
   createDonation(donation: InsertDonation): Promise<Donation>;
   getDonationsByReadingId(readingId: string): Promise<Donation[]>;
   updateDonationPayment(paymentIntentId: string): Promise<Donation>;
+  updateDonationRefund(paymentIntentId: string, refundReason?: string): Promise<Donation>;
 }
 
 export class DrizzleStorage implements IStorage {
@@ -104,6 +108,33 @@ export class DrizzleStorage implements IStorage {
     return readings[0] as FortuneReading | undefined;
   }
 
+  async getReadingsByUserId(userId: string): Promise<FortuneReading[]> {
+    const readings = await db
+      .select()
+      .from(schema.fortuneReadings)
+      .where(eq(schema.fortuneReadings.userId, userId))
+      .orderBy(schema.fortuneReadings.createdAt);
+    return readings as FortuneReading[];
+  }
+
+  async updateReadingUserId(readingId: string, userId: string): Promise<FortuneReading> {
+    const readings = await db
+      .update(schema.fortuneReadings)
+      .set({ userId })
+      .where(eq(schema.fortuneReadings.id, readingId))
+      .returning();
+    return readings[0] as FortuneReading;
+  }
+
+  async removeReadingFromUser(readingId: string): Promise<FortuneReading> {
+    const readings = await db
+      .update(schema.fortuneReadings)
+      .set({ userId: null })
+      .where(eq(schema.fortuneReadings.id, readingId))
+      .returning();
+    return readings[0] as FortuneReading;
+  }
+
   async createDonation(insertDonation: InsertDonation): Promise<Donation> {
     const donations = await db
       .insert(schema.donations)
@@ -123,6 +154,19 @@ export class DrizzleStorage implements IStorage {
     const donations = await db
       .update(schema.donations)
       .set({ isPaid: true })
+      .where(eq(schema.donations.paymentIntentId, paymentIntentId))
+      .returning();
+    return donations[0] as Donation;
+  }
+
+  async updateDonationRefund(paymentIntentId: string, refundReason?: string): Promise<Donation> {
+    const donations = await db
+      .update(schema.donations)
+      .set({
+        isRefunded: true,
+        refundedAt: new Date(),
+        refundReason: refundReason || 'requested_by_customer'
+      })
       .where(eq(schema.donations.paymentIntentId, paymentIntentId))
       .returning();
     return donations[0] as Donation;

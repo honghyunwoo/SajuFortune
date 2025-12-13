@@ -10,6 +10,8 @@ import session from "express-session";
 import connectPGSimple from "connect-pg-simple";
 import pg from "pg";
 import compression from "compression";
+import passport from "./auth/passport";
+import authRoutes from "./auth/routes";
 import {
   securityHeaders,
   corsOptions,
@@ -150,6 +152,13 @@ app.use(
     ...sessionSecurity
   }),
 );
+
+// Passport 초기화 (세션 이후에 설정)
+app.use(passport.initialize());
+app.use(passport.session());
+
+// 인증 라우트 등록
+app.use("/api/auth", authRoutes);
 
 app.use((req, res, next) => {
   const start = Date.now();

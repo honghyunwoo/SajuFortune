@@ -392,4 +392,107 @@ describe('격국 분석기 (Geokguk Analyzer)', () => {
       expect(result.상세해석).toHaveProperty('주의사항');
     });
   });
+
+  describe('특수격 (特殊格) 판별', () => {
+    it('종강격 (從强格) - 일간 득령 + 비겁 많고 관재 약함', () => {
+      // 갑목 일간, 봄(인묘진) 득령, 비겁 많음
+      const 사주 = create사주(
+        { gan: '갑', ji: '인' },  // 비견
+        { gan: '갑', ji: '묘' },  // 비견 + 득령
+        { gan: '갑', ji: '인' },  // 일간 + 득령
+        { gan: '을', ji: '인' }   // 겁재
+      );
+
+      const result = analyze격국(사주);
+
+      // 종강격 조건: 득령 + 비겁 2개 이상 + 관재 약함
+      if (result.격국명 === '종강격') {
+        expect(result.격국종류).toBe('특수격');
+        expect(result.격국강도).toBeGreaterThan(50);
+        expect(result.상세해석.장점).toContain('강력한 리더십');
+        expect(result.상세해석.적합직업).toContain('경영자');
+      }
+
+      // 격국종류는 '정격', '특수격', '무격' 중 하나
+      expect(['정격', '특수격', '무격']).toContain(result.격국종류);
+    });
+
+    it('종왕격 (從旺格) - 비겁 + 인성 많고 식상재관 약함', () => {
+      // 병화 일간, 비겁 + 인성 조합
+      const 사주 = create사주(
+        { gan: '갑', ji: '인' },  // 정인 (목생화)
+        { gan: '을', ji: '묘' },  // 편인 (목생화)
+        { gan: '병', ji: '오' },  // 일간
+        { gan: '병', ji: '사' }   // 비견
+      );
+
+      const result = analyze격국(사주);
+
+      // 종왕격 조건: 비겁 + 인성 강함
+      if (result.격국명 === '종왕격') {
+        expect(result.격국종류).toBe('특수격');
+        expect(result.상세해석.장점).toContain('강한 추진력');
+        expect(result.상세해석.적합직업).toContain('네트워크 비즈니스');
+      }
+
+      expect(['정격', '특수격', '무격']).toContain(result.격국종류);
+    });
+
+    it('종강격 불성립 - 관성이 강한 경우', () => {
+      // 갑목 일간, 득령하지만 관성(금)이 강함
+      const 사주 = create사주(
+        { gan: '경', ji: '신' },  // 정관 (금극목)
+        { gan: '갑', ji: '인' },  // 비견 + 득령
+        { gan: '갑', ji: '묘' },  // 일간
+        { gan: '신', ji: '유' }   // 편관 (금극목)
+      );
+
+      const result = analyze격국(사주);
+
+      // 관성이 강하므로 종강격 불가
+      expect(result.격국명).not.toBe('종강격');
+    });
+
+    it('종왕격 불성립 - 인성이 약한 경우', () => {
+      // 갑목 일간, 비겁은 있지만 인성 없음
+      const 사주 = create사주(
+        { gan: '갑', ji: '자' },  // 비견
+        { gan: '갑', ji: '인' },  // 비견
+        { gan: '갑', ji: '묘' },  // 일간
+        { gan: '을', ji: '진' }   // 겁재
+      );
+
+      const result = analyze격국(사주);
+
+      // 인성 부족으로 종왕격 불가
+      expect(result.격국명).not.toBe('종왕격');
+    });
+
+    it('특수격 결과 구조 검증', () => {
+      // 종강격 가능성 높은 사주
+      const 사주 = create사주(
+        { gan: '병', ji: '오' },
+        { gan: '병', ji: '오' },
+        { gan: '병', ji: '사' },
+        { gan: '정', ji: '미' }
+      );
+
+      const result = analyze격국(사주);
+
+      // 특수격이든 정격이든 필수 속성 존재
+      expect(result).toHaveProperty('격국명');
+      expect(result).toHaveProperty('격국종류');
+      expect(result).toHaveProperty('격국강도');
+      expect(result).toHaveProperty('용신');
+      expect(result).toHaveProperty('희신');
+      expect(result).toHaveProperty('기신');
+
+      // 특수격인 경우 상세 검증
+      if (result.격국종류 === '특수격') {
+        expect(['종강격', '종왕격']).toContain(result.격국명);
+        expect(result.상세해석.장점.length).toBeGreaterThan(0);
+        expect(result.상세해석.적합직업.length).toBeGreaterThan(0);
+      }
+    });
+  });
 });

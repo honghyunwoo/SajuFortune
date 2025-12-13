@@ -75,10 +75,32 @@ export const securityHeaders = helmet({
       defaultSrc: ["'self'"],
       styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
       fontSrc: ["'self'", "https://fonts.gstatic.com"],
-      scriptSrc: ["'self'", "https://js.stripe.com"],
+      scriptSrc: [
+        "'self'",
+        "https://js.stripe.com",
+        // Google AdSense
+        "https://pagead2.googlesyndication.com",
+        "https://www.googletagservices.com",
+        "https://adservice.google.com",
+        "https://tpc.googlesyndication.com",
+        // Kakao SDK
+        "https://t1.kakaocdn.net",
+      ],
       imgSrc: ["'self'", "data:", "https:"],
-      connectSrc: ["'self'", "https://api.stripe.com"],
-      frameSrc: ["'self'", "https://js.stripe.com"],
+      connectSrc: [
+        "'self'",
+        "https://api.stripe.com",
+        // Google AdSense
+        "https://pagead2.googlesyndication.com",
+        "https://googleads.g.doubleclick.net",
+      ],
+      frameSrc: [
+        "'self'",
+        "https://js.stripe.com",
+        // Google AdSense
+        "https://googleads.g.doubleclick.net",
+        "https://tpc.googlesyndication.com",
+      ],
       objectSrc: ["'none'"],
       upgradeInsecureRequests: [],
     },

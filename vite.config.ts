@@ -90,9 +90,21 @@ export default defineConfig({
     },
     chunkSizeWarningLimit: 500,
     target: 'esnext',
-    minify: 'esbuild',
+    minify: 'terser', // terser로 변경하여 더 작은 번들 생성
+    terserOptions: {
+      compress: {
+        drop_console: true, // console.log 제거
+        drop_debugger: true, // debugger 제거
+        pure_funcs: ['console.log', 'console.info'], // 특정 함수 제거
+      },
+      format: {
+        comments: false, // 주석 제거
+      },
+    },
     sourcemap: false, // 프로덕션에서 sourcemap 비활성화로 크기 절감
     cssCodeSplit: true, // CSS 코드 스플리팅 활성화
+    cssMinify: true, // CSS 최소화
+    reportCompressedSize: true, // 압축 크기 리포트
   },
   server: {
     fs: {

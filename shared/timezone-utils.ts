@@ -189,8 +189,10 @@ export function createSeoulDate(
   hour: number = 0,
   minute: number = 0
 ): Date {
-  const dt = createSeoulDateTime(year, month, day, hour, minute);
-  return dt.toJSDate();
+  // createKSTDate와 동일한 로직 사용 - 가장 안정적
+  // JavaScript Date는 로컬 타임존 기준이므로, 입력된 서울 시간이
+  // getHours() 등에서 그대로 반환되도록 조정
+  return createKSTDate(year, month, day, hour, minute);
 }
 
 /**

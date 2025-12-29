@@ -321,15 +321,26 @@ function getMonthGapja(year: number, month: number, day: number, yearGan: 천간
 
 /**
  * 일주 계산 (정확한 기준일 사용)
+ *
+ * 기준점: 1989년 10월 31일 = 甲子日 (갑자일, index 0)
+ * 검증: 온라인 만세력 및 전문 자료로 확인된 날짜
+ *
+ * 참고: 기존 1900년 1월 31일 = 갑자일 가정은 오류
+ *       실제 1900년 1월 31일 = 甲辰日 (갑진일, index 40)
  */
 function getDayGapja(year: number, month: number, day: number): number {
-    // 기준: 1900년 1월 31일을 갑자일(0)로 설정
-    const baseDate = new Date(1900, 0, 31);
+    // 검증된 기준점: 1989년 10월 31일 = 甲子日 (갑자일, index 0)
+    const baseDate = new Date(1989, 9, 31); // JavaScript: month는 0-based (9 = 10월)
     const targetDate = new Date(year, month - 1, day);
-    const diffDays = Math.floor((targetDate.getTime() - baseDate.getTime()) / (1000 * 60 * 60 * 24));
+
+    // 두 날짜 사이의 일수 차이 계산
+    const diffDays = Math.floor(
+        (targetDate.getTime() - baseDate.getTime()) / (1000 * 60 * 60 * 24)
+    );
 
     // 60갑자 순환에서 간지 인덱스 계산
-    const gapjaIndex = (diffDays % 60 + 60) % 60;
+    // 음수 처리: JavaScript의 % 연산자는 음수를 반환할 수 있음
+    const gapjaIndex = ((diffDays % 60) + 60) % 60;
 
     return gapjaIndex;
 }

@@ -367,13 +367,32 @@ export class SinsalCalculator {
         return result;
     }
 
-    // 지지 충돌 기준
+    /**
+     * 지지 충돌(衝) 기준 신살 계산
+     *
+     * 원진 등 두 지지의 충돌을 기반으로 하는 신살을 계산합니다.
+     *
+     * 데이터 형식: 2글자 문자열 배열 (예: ['자미', '축오'])
+     * - 각 문자열은 충돌하는 두 지지를 나타냄
+     * - 한글 지지는 각각 1개의 UTF-16 코드 단위로 구성됨
+     *
+     * @param saju 사주 정보
+     * @param sinsal 신살 데이터 (calculation: 'branch_conflict')
+     * @returns 해당하는 신살 결과 배열
+     */
     static branchConflict(saju: SajuForSinsal, sinsal: SinsalData): SinsalResult[] {
         const result: SinsalResult[] = [];
         const branches = [saju.year.ji, saju.month.ji, saju.day.ji, saju.hour.ji];
 
         sinsal.data.forEach((conflict: string) => {
-            const [branch1, branch2] = conflict.split('');
+            // 충돌 데이터는 정확히 2글자로 구성됨 (예: '자미')
+            // charAt을 사용하여 명시적으로 각 문자를 추출
+            if (conflict.length !== 2) {
+                console.warn(`Invalid conflict data: "${conflict}" - expected 2 characters`);
+                return;
+            }
+            const branch1 = conflict.charAt(0);
+            const branch2 = conflict.charAt(1);
             let positions: string[] = [];
 
             branches.forEach((branch, index) => {

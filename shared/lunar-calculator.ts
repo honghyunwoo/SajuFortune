@@ -578,12 +578,20 @@ export class LunarCalendarCalculator {
 
     /**
      * 60갑자 순환일 계산
+     *
+     * 기준점: 1989년 10월 31일 = 甲子日 (갑자일, index 0)
+     * 검증: 온라인 만세력 및 전문 자료로 확인된 날짜
+     *
+     * 참고: 기존 1900년 1월 31일 = 갑자일 가정은 오류
+     *       실제 1900년 1월 31일 = 甲辰日 (갑진일, index 40)
      */
     public getCyclicalDay(date: Date): number {
-        // 기준일: 1900년 1월 31일 = 갑자일 (0)
-        const baseDate = new Date(1900, 0, 31);
-        const daysDiff = Math.floor((date.getTime() - baseDate.getTime()) / (1000 * 60 * 60 * 24));
-        return (daysDiff % 60 + 60) % 60;
+        // 검증된 기준점: 1989년 10월 31일 = 甲子日 (갑자일, index 0)
+        const baseDate = new Date(1989, 9, 31); // JavaScript: month는 0-based (9 = 10월)
+        const daysDiff = Math.floor(
+            (date.getTime() - baseDate.getTime()) / (1000 * 60 * 60 * 24)
+        );
+        return ((daysDiff % 60) + 60) % 60;
     }
 
     /**

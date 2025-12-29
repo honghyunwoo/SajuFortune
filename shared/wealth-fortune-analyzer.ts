@@ -1,6 +1,13 @@
 /**
  * 재물운 상세 분석 시스템
  * 재성(財星) 분석, 재물 획득 방식 (정재/편재), 투자 성향, 재물운 상승 시기
+ *
+ * 이론적 근거:
+ * - 재성(財星) 분석: 자평진전 재성론, 적천수 재기(財氣)편
+ * - 정재(正財): 정직한 노력의 재물, 월급/고정수입
+ * - 편재(偏財): 투기적 재물, 사업/투자 수익
+ * - 투자 성향: 명리정종 재성론 - 재성 강약에 따른 투자 성향 결정
+ * - 재물운 시기: 오행 상생상극 원리 (재성 오행이 강해지는 시기)
  */
 
 export type HeavenlyStem = '갑' | '을' | '병' | '정' | '무' | '기' | '경' | '신' | '임' | '계';
@@ -252,6 +259,18 @@ function analyzeAcquisitionMethod(wealthStar: {
 
 /**
  * 투자 성향 분석
+ *
+ * 투자 성향 결정 로직:
+ * 1. 기본 리스크는 일간(日干)의 오행 성향에서 결정
+ * 2. 재성 타입과 강도에 따라 조정
+ *
+ * 조정 규칙 (출처: 명리정종 재성론):
+ * - 편재 + 강도 높음(>70): 리스크 상향 (중간→높음, 낮음→중간)
+ * - 편재 + 강도 중간(40-70): 한 단계 상향 가능
+ * - 정재 + 강도 높음(>70): 리스크 하향 (높음→중간, 중간→낮음)
+ * - 정재 + 강도 중간(40-70): 한 단계 하향
+ * - 혼재 + 강도 높음(>60): 중간으로 수렴 (안정성과 기회 균형)
+ * - 없음: 리스크 하향 (보수적 접근 권장)
  */
 function analyzeInvestmentStyle(
   wealthStar: { type: '정재' | '편재' | '혼재' | '없음'; strength: number },
@@ -263,22 +282,54 @@ function analyzeInvestmentStyle(
   unsuitableInvestments: string[];
   advice: string[];
 } {
-  // 일간 기반 투자 성향
+  // 일간 기반 기본 투자 성향
+  // 양간(陽干)은 적극적, 음간(陰干)은 보수적 성향
+  // 화/수 오행은 변동성, 토 오행은 안정성 추구
   const stemRisk: Record<HeavenlyStem, '높음' | '중간' | '낮음'> = {
-    '갑': '중간', '을': '낮음',
-    '병': '높음', '정': '중간',
-    '무': '낮음', '기': '낮음',
-    '경': '중간', '신': '중간',
-    '임': '높음', '계': '중간',
+    '갑': '중간', '을': '낮음',  // 목: 성장 추구, 을목은 유연하여 보수적
+    '병': '높음', '정': '중간',  // 화: 열정적, 병화는 적극적
+    '무': '낮음', '기': '낮음',  // 토: 안정 추구
+    '경': '중간', '신': '중간',  // 금: 실리적
+    '임': '높음', '계': '중간',  // 수: 유동적, 임수는 큰 물로 적극적
   };
 
   let riskLevel = stemRisk[dayStem];
 
-  // 편재가 강하면 리스크 성향 증가
-  if (wealthStar.type === '편재' && wealthStar.strength > 70) {
-    riskLevel = '높음';
+  // 재성 타입과 강도에 따른 리스크 조정
+  if (wealthStar.type === '편재') {
+    // 편재(偏財): 투기성 재물, 강하면 적극적 투자 성향
+    if (wealthStar.strength > 70) {
+      // 매우 강한 편재: 리스크 한 단계 상향
+      if (riskLevel === '낮음') riskLevel = '중간';
+      else if (riskLevel === '중간') riskLevel = '높음';
+    } else if (wealthStar.strength >= 50) {
+      // 중간 편재: 낮음→중간만 상향
+      if (riskLevel === '낮음') riskLevel = '중간';
+    }
+    // 약한 편재(<50): 변화 없음
   } else if (wealthStar.type === '정재') {
-    riskLevel = '낮음';
+    // 정재(正財): 정직한 재물, 안정적 투자 선호
+    if (wealthStar.strength > 70) {
+      // 매우 강한 정재: 리스크 한 단계 하향
+      if (riskLevel === '높음') riskLevel = '중간';
+      else if (riskLevel === '중간') riskLevel = '낮음';
+    } else if (wealthStar.strength >= 50) {
+      // 중간 정재: 높음→중간만 하향
+      if (riskLevel === '높음') riskLevel = '중간';
+    }
+    // 약한 정재(<50): 변화 없음
+  } else if (wealthStar.type === '혼재') {
+    // 혼재: 정재+편재, 균형 잡힌 접근
+    if (wealthStar.strength > 60) {
+      // 강한 혼재: 중간으로 수렴
+      riskLevel = '중간';
+    }
+    // 약한 혼재: 기존 성향 유지
+  } else if (wealthStar.type === '없음') {
+    // 재성 없음: 보수적 접근 권장
+    // 재물운이 약하므로 공격적 투자는 위험
+    if (riskLevel === '높음') riskLevel = '중간';
+    else riskLevel = '낮음';
   }
 
   const styles = {
